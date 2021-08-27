@@ -81,7 +81,7 @@ class Field{
             {
                 type:"t",
                 center: [this.w/2,1],
-                vectors:[[0,0],[-1,-1],[0,-1],[1,-1]],
+                vectors:[[0,1],[-1,0],[0,0],[1,0]],
                 color:"#A000B8"//
             },
             //O
@@ -116,14 +116,14 @@ class Field{
             {
                 type:"l",
                 center: [this.w/2,1],
-                vectors:[[-1,-1],[-1,0],[-1,1],[0,1]],
+                vectors:[[0,-1],[0,0],[0,1],[1,1]],
                 color:"#F0B000"//
             },
             //j
             {
                 type:"j",
                 center: [this.w/2,1],
-                vectors:[[1,-1],[1,0],[1,1],[0,1]],
+                vectors:[[0,-1],[0,0],[0,1],[-1,1]],
                 color:"#0020D0"//blue
             }
 

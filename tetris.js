@@ -273,6 +273,25 @@ class Field{
         {
             const newPiece = this.clonePiece(this.livePiece);
             this.rotateLeft(newPiece);
+            let maxOb = 0;
+            for(let i = 0; i < newPiece.vectors.length; i++)
+            {
+                const vec = newPiece.vectors[i];
+                const posX = vec[0]+newPiece.center[0];
+                const posY = vec[1]+newPiece.center[1];
+                if(posX < 0 && Math.abs(maxOb) < Math.abs(posX))
+                {
+                    maxOb = posX;
+                }
+                else if(posX > this.w && Math.abs(maxOb) < Math.abs(posX-this.w))
+                {
+                    maxOb = posX
+                }
+            }
+            if(maxOb)
+            {
+                newPiece.center[0] -= maxOb;
+            }
             if(this.isClearTranslated(newPiece,[0,0])){
                 this.livePiece = newPiece;
             }

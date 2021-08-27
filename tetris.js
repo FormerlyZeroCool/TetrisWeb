@@ -482,7 +482,27 @@ class Field{
     {
         if(!this.active)
             return;
-        
+        //check if any rows have been cleared
+        //if they are clear them, and translate rows above down
+        //returns count of rows cleared
+        const rowsCleared = this.clearFilled();
+        //scoring sytsem
+        if(rowsCleared >= 4)
+        {
+            this.score += 800 + 400*(this.lastRowsCleared >= 4);
+        }
+        else
+        {
+            this.score += 100*rowsCleared;
+        }
+        //update last row cleared count for scoring
+        if(rowsCleared > 0)
+            this.lastRowsCleared = rowsCleared;
+        //leveling system
+        while(this.calcMaxScore(this.level) < this.score && this.level < this.maxLevel)
+        {
+            this.level++;
+        }
         //check if piece can be moved down one
         if(this.isClearBelow(this.livePiece))
         {
@@ -516,27 +536,7 @@ class Field{
             {
                 topRow.vectors.push([i,0]);
             }
-            //check if any rows have been cleared
-            //if they are clear them, and translate rows above down
-            //returns count of rows cleared
-            const rowsCleared = this.clearFilled();
-            //scoring sytsem
-            if(rowsCleared >= 4)
-            {
-                this.score += 800 + 400*(this.lastRowsCleared >= 4);
-            }
-            else
-            {
-                this.score += 100*rowsCleared;
-            }
-            //update last row cleared count for scoring
-            if(rowsCleared > 0)
-                this.lastRowsCleared = rowsCleared;
-            //leveling system
-            while(this.calcMaxScore(this.level) < this.score && this.level < this.maxLevel)
-            {
-                this.level++;
-            }
+            
             //use existing algorithm to check if the top row is filled
             if(!this.isClear(topRow))
             {

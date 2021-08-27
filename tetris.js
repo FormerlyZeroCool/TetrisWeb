@@ -151,6 +151,14 @@ class Field{
         {
             this.field.push({color:"#000000"});
         }
+    }
+    resize(width, height)
+    {
+        this.canvas.width = width;
+        this.canvas.height = height;
+        this.boundedWidth = this.canvas.width/8*5;
+        this.boundedHeight = this.canvas.height;
+        this.draw();
     }  
     calcProjectedLanding()
     {
@@ -628,13 +636,13 @@ class Field{
         }
         width -= width/3;
         height -= height/3;
-        const hoffset = 155;
-        this.ctx.font = '16px Calibri';
+        const hoffset = 30+8*height;
+        this.ctx.font = `${height}px Calibri`;
         this.ctx.fillStyle = "#000000";
-        this.ctx.fillText('Hold Piece:', 5+this.boundedWidth, 15);
+        this.ctx.fillText('Hold Piece:', 5+this.boundedWidth, height);
         this.ctx.fillText('Score: '+this.score, 5+this.boundedWidth, 17+height*6.8);
         const levelText = this.level === (this.maxLevel-1)?"Max":this.level;
-        this.ctx.fillText('Level: '+levelText, 5+this.boundedWidth, 17+height*6.8+20);
+        this.ctx.fillText('Level: '+levelText, 5+this.boundedWidth, 17+height*7.5+20);
         if(this.showPieceQueue)
         {
             for(let i = 0; i < this.pieceQueue.length && i < 5; i++)
@@ -679,14 +687,14 @@ class Field{
             
             this.placeAny(piece, field, 5);
             this.ctx.fillStyle = "#000000";
-            this.ctx.fillRect(this.boundedWidth+5, 30, width*5, height*5);
+            this.ctx.fillRect(this.boundedWidth+5, height+5, width*5, height*5);
             for(let y = 0; y < 5; y++)
             {
                 for(let x = 0; x < 5; x++)
                 {
                     const color = field[x + y*5].color;
                     const gx = this.boundedWidth+5+(width)*x;
-                    const gy = 30+(height)*y;
+                    const gy = 30+(height)*y+5;
                     if(color != "#000000"){
                         this.ctx.fillStyle = color;
                         this.ctx.fillRect(gx, gy, width, height);
@@ -886,6 +894,7 @@ async function main()
 {
    
     const canvas = document.getElementById("screen");
+
     const ctx = canvas.getContext("2d");
     const gridDim = 4
     
@@ -893,6 +902,9 @@ async function main()
     let x = 0
     dim = canvas.width;
     let field = new Field(canvas, ctx, 15);
+    const snHeight = document.getElementById("site_name").clientHeight
+    field.resize(window.innerWidth, window.innerHeight-snHeight*3);
+
     canvas.addEventListener("click", (event) => field.onClickField(event) );
     canvas.addEventListener("mousemove",(event) => field.onMouseMove(event) );
     const gridToggleButton = document.getElementById("gridToggleButton");

@@ -1,0 +1,34 @@
+<html>
+<body>
+    <h2>Bricky Breaky(Def not Tetris)</h2>
+
+    <div>
+    <canvas id="screen" width="450" height="600"
+    style="border:1px solid #c3c3c3;">
+    </canvas>
+</div>
+<h6>Options:</h6>
+<button id="gridToggleButton">Toggle show/hide Grid</button> 
+<button id="holdLimitButton">Toggle hold once per piece rule</button>
+<button id="holdToggleButton">Toggle hold functionality</button>
+<button id="projectedLandingToggleButton">Toggle show/hide piece projected landing</button>
+<button id="pieceQueueShowingToggleButton">Toggle to show/hide the piece queue</button>
+<div >
+    <h3>Instructions:</h3>
+    <p><h4>Keyboard:</h4>
+        Press r, or c to hold current piece.<br>
+        Press the a key to move left, d to move right, and w to rotate<br>
+        Pressing the s key will move the currently active piece down by one<br>
+        Pressing the space bar will hard drop the currently active piece
+    </p>
+    <p><h4>Touch (mobile):</h4>
+        Swipe up to hold current piece.<br>
+        Drag left on field to move left, drage right to move right, and tap to rotate<br>
+        Dragging downwards will drag the piece down<br>
+        Swiping down will hard drop the currently active piece
+    </p>
+</div>
+    <script src="tetris.js"></script>
+</body>
+
+</html>

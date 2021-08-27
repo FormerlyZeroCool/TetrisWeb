@@ -155,12 +155,10 @@ class Field{
     calcProjectedLanding()
     {
         this.projectedLandingPiece = this.clonePiece(this.livePiece);
-        this.clear(this.livePiece);
         while(this.isClearBelow(this.projectedLandingPiece) && this.projectedLandingPiece.center[1] < this.h)
         {
             this.projectedLandingPiece.center[1]++;
         }
-        this.place(this.livePiece);
     }  
     hSlide(event)
     {
@@ -185,13 +183,12 @@ class Field{
     {
         this.piecePosAtTouchStart[1] += event.deltaY*4;
         const newGridY = Math.floor(((this.piecePosAtTouchStart[1] > this.boundedHeight?this.boundedHeight:this.piecePosAtTouchStart[1])/this.boundedHeight)*this.h);
-        this.clear(this.livePiece);
+
         if(this.active)
         while(this.livePiece.center[1] <= newGridY && this.isClearBelow(this.livePiece))
         {
             this.livePiece.center[1]++;
         }
-        this.place(this.livePiece);
     }
     touchmove_slideHPred(event)
     {
@@ -262,36 +259,29 @@ class Field{
     }
     moveRight()
     {
-        this.clear(this.livePiece);
         if(this.isClearTranslated(this.livePiece, [1,0]))
             this.livePiece.center[0]++;
-        this.place(this.livePiece);
     }
     moveLeft()
     {
-        this.clear(this.livePiece);
         if(this.isClearTranslated(this.livePiece, [-1,0]))
             this.livePiece.center[0]--;
-        this.place(this.livePiece);
     }
     rotate()
     {
         if(this.livePiece.type != "o")
         {
-            this.clear(this.livePiece);
             const newPiece = this.clonePiece(this.livePiece);
             this.rotateLeft(newPiece);
             if(this.isClearTranslated(newPiece,[0,0])){
                 this.livePiece = newPiece;
             }
-            this.place(this.livePiece);
         }
     }
     holdLive()
     {
         if((!this.livePiece.swapped || !this.holdLimitToggle) && this.holdToggle)
         {
-            this.clear(this.livePiece);
             const type = this.livePiece.type;
             let old = this.pieceTypes.find(el => el.type === type);
             old.center = [this.w/2, 1];
@@ -307,7 +297,6 @@ class Field{
                 this.holdPiece = old;
             }
             this.livePiece.swapped = true;
-            this.place(this.livePiece);
             this.listenerHandler.registeredTouch = false;
         }
     }
@@ -323,15 +312,12 @@ class Field{
         this.touchVelocity = 0;
         this.touchMoveCount = 0;
         this.deltaTouch = 0;
-        this.place(this.livePiece);
         this.listenerHandler.registeredTouch = false;
     }
     moveDown()
     {
-        this.clear(this.livePiece);
         if(this.isClearTranslated(this.livePiece, [0,1]))
             this.livePiece.center[1]++;
-        this.place(this.livePiece);
     }
     onKeyPress(event)
     {
@@ -496,26 +482,7 @@ class Field{
     {
         if(!this.active)
             return;
-        //remove colors of live piece from field for checking collision if piece is moved down
-        this.clear(this.livePiece);
-        //check if any rows have been cleared
-        //if they are clear them, and translate rows above down
-        //returns count of rows cleared
-        const rowsCleared = this.clearFilled();
-        //scoring sytsem
-        if(rowsCleared >= 4)
-        {
-            this.score += 800 + 400*(this.lastRowsCleared>=4);
-        }
-        else
-        {
-            this.score += 100*rowsCleared;
-        }
-        //leveling system
-        while(this.calcMaxScore(this.level) < this.score && this.level < this.maxLevel)
-        {
-            this.level++;
-        }
+        
         //check if piece can be moved down one
         if(this.isClearBelow(this.livePiece))
         {
@@ -549,6 +516,27 @@ class Field{
             {
                 topRow.vectors.push([i,0]);
             }
+            //check if any rows have been cleared
+            //if they are clear them, and translate rows above down
+            //returns count of rows cleared
+            const rowsCleared = this.clearFilled();
+            //scoring sytsem
+            if(rowsCleared >= 4)
+            {
+                this.score += 800 + 400*(this.lastRowsCleared >= 4);
+            }
+            else
+            {
+                this.score += 100*rowsCleared;
+            }
+            //update last row cleared count for scoring
+            if(rowsCleared > 0)
+                this.lastRowsCleared = rowsCleared;
+            //leveling system
+            while(this.calcMaxScore(this.level) < this.score && this.level < this.maxLevel)
+            {
+                this.level++;
+            }
             //use existing algorithm to check if the top row is filled
             if(!this.isClear(topRow))
             {
@@ -561,12 +549,6 @@ class Field{
         {
             this.liveBlocked = true;
         }
-        //place current live piece onto the field for drawing
-        if(this.livePiece)
-            this.place(this.livePiece);
-        //update last row cleared count for scoring
-        if(rowsCleared > 0)
-            this.lastRowsCleared = rowsCleared;
     }
     
     draw()
@@ -590,6 +572,21 @@ class Field{
                     this.ctx.strokeRect(gx+width/4, gy+height/4, width/2, height/2);
                 }
         }
+        for(let i = 0; i < this.livePiece.vectors.length; i++)
+        {
+            const vector = this.livePiece.vectors[i];
+            const gx = Math.floor((this.livePiece.center[0] + vector[0])*this.boundedWidth/this.w);
+            const gy = Math.floor((this.livePiece.center[1] + vector[1])*this.boundedHeight/this.h);
+            
+            this.ctx.fillStyle = this.livePiece.color;
+            this.ctx.fillRect(gx, gy, width, height);
+            
+            this.ctx.strokeStyle = "#000000";
+            this.ctx.strokeRect(gx, gy, width, height);
+
+            this.ctx.strokeStyle = "#FFFFFF";
+            this.ctx.strokeRect(gx+width/4, gy+height/4, width/2, height/2);
+        }
         for(let y = 0; y < this.h; y++)
         {
             for(let x = 0; x < this.w; x++)
@@ -601,12 +598,13 @@ class Field{
                     this.ctx.fillRect(x*width, y*height, width, height);
                     this.ctx.strokeStyle = "#000000";
                     this.ctx.strokeRect(x*width, y*height, width, height);
+                    this.ctx.strokeStyle = "#FFFFFF";
+                    this.ctx.strokeRect(x*width+width/4, y*height+height/4, width/2, height/2);
                 }
                 this.ctx.strokeStyle = "#FFFFFF";
                 if(this.drawGrid)
                     this.ctx.strokeRect(x*width, y*height, width, height);
-                if(color != "#000000")
-                    this.ctx.strokeRect(x*width+width/4, y*height+height/4, width/2, height/2);
+
             }
         }
         width -= width/3;
@@ -904,7 +902,7 @@ async function main()
 
     window.addEventListener('keydown', function(e) {
         if((e.keyCode == 32 || e.keyCode == 37 || e.keyCode == 38 || e.keyCode == 39 || e.keyCode == 40) && e.target == document.body) {
-          e.preventDefault();
+          e.preventDefaultF();
           field.onKeyPress(e)
         }
         else

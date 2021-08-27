@@ -903,7 +903,7 @@ async function main()
     dim = canvas.width;
     let field = new Field(canvas, ctx, 15);
     const snHeight = document.getElementById("site_name").clientHeight
-    field.resize(window.innerWidth, window.innerHeight-snHeight*3);
+    field.resize((window.innerHeight-snHeight*3)/2.5, window.innerHeight-snHeight*3);
 
     canvas.addEventListener("click", (event) => field.onClickField(event) );
     canvas.addEventListener("mousemove",(event) => field.onMouseMove(event) );

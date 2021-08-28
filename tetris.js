@@ -60,8 +60,9 @@ class Field{
     {
         this.canvas = canvas;
         this.ctx = ctx;
-        this.boundedWidth = canvas.width/8*5;
+        this.boundedWidth = canvas.width-canvas.width/10;
         this.boundedHeight = canvas.height;
+        this.xOffset = (this.canvas.width - this.boundedWidth)/2;
         this.w = 10;
         this.h = 25;
         this.mousePos = {x:0, y:0};
@@ -160,8 +161,10 @@ class Field{
     {
         this.canvas.width = width;
         this.canvas.height = height;
-        this.boundedWidth = this.canvas.width/8*5;
         this.boundedHeight = this.canvas.height;
+        this.boundedWidth = this.boundedHeight/2.2;
+        this.xOffset = (this.canvas.width-this.boundedWidth*1.4)/2;
+        this.xOffset = this.xOffset<0?0:this.xOffset;
         this.draw();
     }  
     calcProjectedLanding()
@@ -587,7 +590,7 @@ class Field{
         let width = this.boundedWidth/this.w;
         let height = this.boundedHeight/this.h;
         this.ctx.fillStyle = "#000000";
-        this.ctx.fillRect(0, 0, this.boundedWidth, this.boundedHeight);
+        this.ctx.fillRect(this.xOffset, 0, this.boundedWidth, this.boundedHeight);
         if(this.showProjectedLanding)
         {
             this.calcProjectedLanding();
@@ -595,7 +598,7 @@ class Field{
                 for(let i = 0; i < this.projectedLandingPiece.vectors.length; i++)
                 {
                     const vector = this.projectedLandingPiece.vectors[i];
-                    const gx = Math.floor((this.projectedLandingPiece.center[0] + vector[0])*this.boundedWidth/this.w);
+                    const gx = this.xOffset + Math.floor((this.projectedLandingPiece.center[0] + vector[0])*this.boundedWidth/this.w);
                     const gy = Math.floor((this.projectedLandingPiece.center[1] + vector[1])*this.boundedHeight/this.h);
                     this.ctx.strokeStyle = "#FFFFFF";
                     this.ctx.strokeRect(gx, gy, width, height);
@@ -606,7 +609,7 @@ class Field{
         for(let i = 0; i < this.livePiece.vectors.length; i++)
         {
             const vector = this.livePiece.vectors[i];
-            const gx = Math.floor((this.livePiece.center[0] + vector[0])*this.boundedWidth/this.w);
+            const gx = this.xOffset + Math.floor((this.livePiece.center[0] + vector[0])*this.boundedWidth/this.w);
             const gy = Math.floor((this.livePiece.center[1] + vector[1])*this.boundedHeight/this.h);
             
             this.ctx.fillStyle = this.livePiece.color;
@@ -626,15 +629,15 @@ class Field{
                 this.ctx.fillStyle = color;
                 
                 if(color != "#000000"){
-                    this.ctx.fillRect(x*width, y*height, width, height);
+                    this.ctx.fillRect(this.xOffset + x*width, y*height, width, height);
                     this.ctx.strokeStyle = "#000000";
-                    this.ctx.strokeRect(x*width, y*height, width, height);
+                    this.ctx.strokeRect(this.xOffset + x*width, y*height, width, height);
                     this.ctx.strokeStyle = "#FFFFFF";
-                    this.ctx.strokeRect(x*width+width/4, y*height+height/4, width/2, height/2);
+                    this.ctx.strokeRect(this.xOffset + x*width+width/4, y*height+height/4, width/2, height/2);
                 }
                 this.ctx.strokeStyle = "#FFFFFF";
                 if(this.drawGrid)
-                    this.ctx.strokeRect(x*width, y*height, width, height);
+                    this.ctx.strokeRect(this.xOffset + x*width, y*height, width, height);
 
             }
         }
@@ -643,10 +646,10 @@ class Field{
         const hoffset = 30+8*height;
         this.ctx.font = `${height}px Calibri`;
         this.ctx.fillStyle = "#000000";
-        this.ctx.fillText('Hold Piece:', 5+this.boundedWidth, height);
-        this.ctx.fillText('Score: '+this.score, 5+this.boundedWidth, 17+height*6.8);
+        this.ctx.fillText('Hold Piece:', this.xOffset + 5+this.boundedWidth, height);
+        this.ctx.fillText('Score: '+this.score, this.xOffset + 5+this.boundedWidth, 17+height*6.8);
         const levelText = this.level === (this.maxLevel-1)?"Max":this.level;
-        this.ctx.fillText('Level: '+levelText, 5+this.boundedWidth, 17+height*7.5+20);
+        this.ctx.fillText('Level: '+levelText, this.xOffset + 5+this.boundedWidth, 17+height*7.5+20);
         if(this.showPieceQueue)
         {
             for(let i = 0; i < this.pieceQueue.length && i < 5; i++)
@@ -658,13 +661,13 @@ class Field{
                 
                 this.placeAny(piece, field, 5);
                 this.ctx.fillStyle = "#000000";
-                this.ctx.fillRect(this.boundedWidth+5, hoffset+(height*5.2)*i, width*5, height*5);
+                this.ctx.fillRect(this.xOffset + this.boundedWidth+5, hoffset+(height*5.2)*i, width*5, height*5);
                 for(let y = 0; y < 5; y++)
                 {
                     for(let x = 0; x < 5; x++)
                     {
                         const color = field[x + y*5].color;
-                        const gx = this.boundedWidth+5+(width)*x;
+                        const gx = this.xOffset + this.boundedWidth+5+(width)*x;
                         const gy = hoffset+(height*5.2)*i+(height)*y;
                         if(color != "#000000"){
                             this.ctx.fillStyle = color;
@@ -691,13 +694,13 @@ class Field{
             
             this.placeAny(piece, field, 5);
             this.ctx.fillStyle = "#000000";
-            this.ctx.fillRect(this.boundedWidth+5, height+5, width*5, height*5);
+            this.ctx.fillRect(this.xOffset + this.boundedWidth+5, height+5, width*5, height*5);
             for(let y = 0; y < 5; y++)
             {
                 for(let x = 0; x < 5; x++)
                 {
                     const color = field[x + y*5].color;
-                    const gx = this.boundedWidth+5+(width)*x;
+                    const gx = this.xOffset + this.boundedWidth+5+(width)*x;
                     const gy = 30+(height)*y+5;
                     if(color != "#000000"){
                         this.ctx.fillStyle = color;
@@ -907,7 +910,7 @@ async function main()
     dim = canvas.width;
     let field = new Field(canvas, ctx, 15);
     const snHeight = document.getElementById("site_name").clientHeight
-    field.resize((window.innerHeight)/1.5, window.innerHeight-snHeight*3);
+    field.resize(window.innerWidth, window.innerHeight-snHeight*3);
 
     canvas.addEventListener("click", (event) => field.onClickField(event) );
     canvas.addEventListener("mousemove",(event) => field.onMouseMove(event) );

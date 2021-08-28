@@ -698,7 +698,7 @@ class Field{
             let field = [];
             for(let j = 0; j < 25; j++)
                 field.push({color:"#000000"});
-            const piece = {type:this.holdPiece.type,center:[2,2], vectors:this.holdPiece.vectors, color:this.holdPiece.color};
+            const piece = {type:this.holdPiece.type,center:[2,1], vectors:this.holdPiece.vectors, color:this.holdPiece.color};
             
             this.placeAny(piece, field, 5);
             this.ctx.fillStyle = "#000000";

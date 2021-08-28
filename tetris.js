@@ -295,9 +295,9 @@ class Field{
                 {
                     maxOb = posX;
                 }
-                else if(posX > this.w && Math.abs(maxOb) < Math.abs(posX-this.w))
+                else if(posX >= this.w && Math.abs(maxOb) < Math.abs(posX-this.w+1))
                 {
-                    maxOb = posX
+                    maxOb = posX-this.w+1;
                 }
             }
             if(maxOb)

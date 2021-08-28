@@ -138,6 +138,10 @@ class Field{
         this.listenerHandler.registerCallBack("touchend", e => this.touchend_holdLivePred(e), e => this.holdLive());
         this.listenerHandler.registerCallBack("touchend", e => this.touchend_pausePred(e), e => this.active = !this.active);
         
+
+        this.canvas.addEventListener("click", (event) => this.onClickField(event) );
+        this.canvas.addEventListener("mousemove",(event) => this.onMouseMove(event) );
+
         this.holdPiece = {type:"null",center:[0,0],vectors:[], color:"#000000"};
         this.livePiece = this.genRandomNewPiece();
         this.liveBlocked = false;
@@ -903,7 +907,7 @@ async function main()
     dim = canvas.width;
     let field = new Field(canvas, ctx, 15);
     const snHeight = document.getElementById("site_name").clientHeight
-    field.resize((window.innerHeight-snHeight*3)/2.5, window.innerHeight-snHeight*3);
+    field.resize((window.innerHeight)/1.5, window.innerHeight-snHeight*3);
 
     canvas.addEventListener("click", (event) => field.onClickField(event) );
     canvas.addEventListener("mousemove",(event) => field.onMouseMove(event) );
@@ -932,8 +936,9 @@ async function main()
     toggleBackgroundColorButton(pieceQueueShowingToggleButton, field.showPieceQueue);
 
     window.addEventListener('keydown', function(e) {
+        this.console.log(e)
         if((e.keyCode == 32 || e.keyCode == 37 || e.keyCode == 38 || e.keyCode == 39 || e.keyCode == 40) && e.target == document.body) {
-          e.preventDefaultF();
+          e.preventDefault();
           field.onKeyPress(e)
         }
         else

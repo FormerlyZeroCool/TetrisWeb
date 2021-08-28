@@ -132,13 +132,13 @@ class Field{
         this.piecePosAtTouchStart = [0,0];
         this.listenerHandler = new SingleTouchListener(canvas, false);
         this.listenerHandler.registerCallBack("touchstart", e => true, e => this.resetTouch());
-        this.listenerHandler.registerCallBack("touchmove", e => this.touchmove_slideHPred(e), e => {this.hSlide(e);e.preventDefault();});
-        this.listenerHandler.registerCallBack("touchmove", e => this.touchmove_slideVPred(e), e => {this.vSlide(e);e.preventDefault();});
-        this.listenerHandler.registerCallBack("touchend", e => this.touchend_rotatePred(e), e => {this.rotate();e.preventDefault();});
-        this.listenerHandler.registerCallBack("touchend", e => this.touchend_hardDropPred(e), e => {this.hardDrop();e.preventDefault();});
-        this.listenerHandler.registerCallBack("touchend", e => this.touchend_holdLivePred(e), e => {this.holdLive();e.preventDefault();});
+        this.listenerHandler.registerCallBack("touchmove", e => this.touchmove_slideHPred(e), e => {this.hSlide(e);if(e.touchPos[0]< this.boundedWidth)  e.preventDefault();});
+        this.listenerHandler.registerCallBack("touchmove", e => this.touchmove_slideVPred(e), e => {this.vSlide(e);if(e.touchPos[0]< this.boundedWidth) e.preventDefault();});
+        this.listenerHandler.registerCallBack("touchend", e => this.touchend_rotatePred(e), e => {this.rotate();if(e.touchPos[0]< this.boundedWidth) e.preventDefault();});
+        this.listenerHandler.registerCallBack("touchend", e => this.touchend_hardDropPred(e), e => {this.hardDrop();if(e.touchPos[0]< this.boundedWidth) e.preventDefault();});
+        this.listenerHandler.registerCallBack("touchend", e => this.touchend_holdLivePred(e), e => {this.holdLive();if(e.touchPos[0]< this.boundedWidth) e.preventDefault();});
         this.listenerHandler.registerCallBack("touchend", e => this.touchend_pausePred(e), e => this.active = !this.active);
-        
+    
 
         this.canvas.addEventListener("click", (event) => this.onClickField(event) );
         this.canvas.addEventListener("mousemove",(event) => this.onMouseMove(event) );

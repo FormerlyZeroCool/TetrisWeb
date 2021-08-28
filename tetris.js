@@ -252,6 +252,14 @@ class Field{
             piece.vectors[i][0] = temp;
         }
     }
+    rotateRight(piece){
+        for(let i = 0; i < piece.vectors.length; i++)
+        {
+            const temp = piece.vectors[i][1];
+            piece.vectors[i][1] = piece.vectors[i][0];
+            piece.vectors[i][0] = temp*-1;
+        }
+    }
     isClear(piece)
     {
         for(let i = 0; i < piece.vectors.length; i++)
@@ -287,7 +295,7 @@ class Field{
         if(this.livePiece.type != "o")
         {
             const newPiece = this.clonePiece(this.livePiece);
-            this.rotateLeft(newPiece);
+            this.rotateRight(newPiece);
             let maxOb = 0;
             for(let i = 0; i < newPiece.vectors.length; i++)
             {

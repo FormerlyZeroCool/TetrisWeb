@@ -137,6 +137,7 @@ class Field{
         this.listenerHandler.registerCallBack("touchend", e => this.touchend_rotatePred(e), e => {this.rotate();if(e.touchPos[0]< this.boundedWidth) e.preventDefault();});
         this.listenerHandler.registerCallBack("touchend", e => this.touchend_hardDropPred(e), e => {this.hardDrop();if(e.touchPos[0]< this.boundedWidth) e.preventDefault();});
         this.listenerHandler.registerCallBack("touchend", e => this.touchend_holdLivePred(e), e => {this.holdLive();if(e.touchPos[0]< this.boundedWidth) e.preventDefault();});
+        this.listenerHandler.registerCallBack("touchend", e => this.touchend_holdLivePred2(e), e => {this.holdLive();if(e.touchPos[0]< this.boundedWidth) e.preventDefault();});
         this.listenerHandler.registerCallBack("touchend", e => this.touchend_pausePred(e), e => {this.active = !this.active;if(e.touchPos[0]< this.boundedWidth) e.preventDefault();});
     
 
@@ -220,12 +221,18 @@ class Field{
     touchend_pausePred(event)
     {
         //tap registered
-        return (event.mag < 14 && event.timeDelayFromStartToEnd < 250 && event.timeDelayFromStartToEnd > 50 && event.touchPos[0] > this.boundedWidth);
+        return (event.mag < 14 && event.timeDelayFromStartToEnd < 250 && event.timeDelayFromStartToEnd > 50 && event.touchPos[0] > this.boundedWidth && event.touchPos[1] >= this.boundedHeight/5);
     }
     touchend_hardDropPred(event)
     {
         //swipe down identified  
         return (this.active && event.deltaY > 25 && event.avgVelocity > 30 && event.angle < 0 && Math.abs(event.angle) >= 45 && Math.abs(event.angle) <= 135 && event.timeDelayFromStartToEnd < 200);
+    }
+    touchend_holdLivePred2(event)
+    {
+        //tap registered
+        return (event.mag < 14 && event.timeDelayFromStartToEnd < 250 && event.timeDelayFromStartToEnd > 50 && event.touchPos[0] > this.boundedWidth && event.touchPos[1] < this.boundedHeight/5);
+
     }
     touchend_holdLivePred(event)
     {

@@ -131,7 +131,7 @@ class Field{
         ];
         this.piecePosAtTouchStart = [0,0];
         this.listenerHandler = new SingleTouchListener(canvas, false);
-        this.listenerHandler.registerCallBack("touchstart", e => true, e => {this.resetTouch();if(e.touchPos[0]< this.boundedWidth)  e.preventDefault();});
+        this.listenerHandler.registerCallBack("touchstart", e => true, e => {this.resetTouch();if(e.touchPos[0]< this.xOffset + this.boundedWidth)  e.preventDefault();});
         this.listenerHandler.registerCallBack("touchmove", e => this.touchmove_slideHPred(e), e => {this.hSlide(e);});
         this.listenerHandler.registerCallBack("touchmove", e => this.touchmove_slideVPred(e), e => {this.vSlide(e);});
         this.listenerHandler.registerCallBack("touchend", e => this.touchend_rotatePred(e), e => {this.rotate();});
@@ -216,12 +216,12 @@ class Field{
     }
     touchend_rotatePred(event)
     {
-        return this.active && event.mag < 7 && event.timeDelayFromStartToEnd < 250 && event.touchPos[0] < this.boundedWidth;
+        return this.active && event.mag < 7 && event.timeDelayFromStartToEnd < 250 && event.touchPos[0] < this.xOffset + this.boundedWidth;
     }
     touchend_pausePred(event)
     {
         //tap registered
-        return (event.mag < 14 && event.timeDelayFromStartToEnd < 250 && event.timeDelayFromStartToEnd > 50 && event.touchPos[0] > this.boundedWidth && event.touchPos[1] >= this.boundedHeight/5);
+        return (event.mag < 14 && event.timeDelayFromStartToEnd < 250 && event.timeDelayFromStartToEnd > 50 && event.touchPos[0] > this.xOffset + this.boundedWidth && event.touchPos[1] >= this.boundedHeight/5);
     }
     touchend_hardDropPred(event)
     {
@@ -231,7 +231,7 @@ class Field{
     touchend_holdLivePred2(event)
     {
         //tap registered
-        return (event.mag < 14 && event.timeDelayFromStartToEnd < 250 && event.timeDelayFromStartToEnd > 50 && event.touchPos[0] > this.boundedWidth && event.touchPos[1] < this.boundedHeight/5);
+        return (event.mag < 14 && event.timeDelayFromStartToEnd < 250 && event.timeDelayFromStartToEnd > 50 && event.touchPos[0] > this.xOffset + this.boundedWidth && event.touchPos[1] < this.boundedHeight/5);
 
     }
     touchend_holdLivePred(event)

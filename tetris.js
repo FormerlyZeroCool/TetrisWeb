@@ -137,7 +137,7 @@ class Field{
         this.listenerHandler.registerCallBack("touchend", e => this.touchend_rotatePred(e), e => {this.rotate();if(e.touchPos[0]< this.boundedWidth) e.preventDefault();});
         this.listenerHandler.registerCallBack("touchend", e => this.touchend_hardDropPred(e), e => {this.hardDrop();if(e.touchPos[0]< this.boundedWidth) e.preventDefault();});
         this.listenerHandler.registerCallBack("touchend", e => this.touchend_holdLivePred(e), e => {this.holdLive();if(e.touchPos[0]< this.boundedWidth) e.preventDefault();});
-        this.listenerHandler.registerCallBack("touchend", e => this.touchend_pausePred(e), e => this.active = !this.active);
+        this.listenerHandler.registerCallBack("touchend", e => this.touchend_pausePred(e), e => {this.active = !this.active;if(e.touchPos[0]< this.boundedWidth) e.preventDefault();});
     
 
         this.canvas.addEventListener("click", (event) => this.onClickField(event) );

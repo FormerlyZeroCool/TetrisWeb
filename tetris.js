@@ -760,7 +760,7 @@ function logToServer(data)
 }
 class SingleTouchListener
 {
-    constructor(component, preventDefault)
+    constructor(component, preventDefault, mouseEmulation = true)
     {
         this.lastTouchTime = Date.now();
         this.preventDefault = preventDefault;
@@ -778,7 +778,12 @@ class SingleTouchListener
         component.addEventListener('touchstart', event => {this.touchStartHandler(event);}, false);
         component.addEventListener('touchmove', event => this.touchMoveHandler(event), false);
         component.addEventListener('touchend', event => this.touchEndHandler(event), false);
-        
+        if(mouseEmulation)
+        {
+            component.addEventListener('mousedown', event => this.touchStartHandler(event));
+            component.addEventListener('mousemove', event => this.touchMoveHandler(event));
+            component.addEventListener('mouseup', event => this.touchEndHandler(event));
+        }
     }
     registerCallBack(listenerType, predicate, callBack)
     {

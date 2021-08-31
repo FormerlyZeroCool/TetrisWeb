@@ -933,8 +933,6 @@ async function main()
     const snHeight = document.getElementById("site_name").clientHeight
     field.resize(window.innerWidth, window.innerHeight-snHeight*3);
 
-    canvas.addEventListener("click", (event) => field.onClickField(event) );
-    canvas.addEventListener("mousemove",(event) => field.onMouseMove(event) );
     const gridToggleButton = document.getElementById("gridToggleButton");
     gridToggleButton.addEventListener("click", event => {field.drawGrid = !field.drawGrid; toggleBackgroundColorButton(gridToggleButton, field.drawGrid);});
     toggleBackgroundColorButton(gridToggleButton, field.drawGrid);

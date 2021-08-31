@@ -780,9 +780,10 @@ class SingleTouchListener
         component.addEventListener('touchend', event => this.touchEndHandler(event), false);
         if(mouseEmulation)
         {
-            component.addEventListener('mousedown', event => this.touchStartHandler(event));
-            component.addEventListener('mousemove', event => this.touchMoveHandler(event));
-            component.addEventListener('mouseup', event => this.touchEndHandler(event));
+            
+                component.addEventListener('mousedown', event => {event.item = x => event; this.touchStartHandler(event)});
+                component.addEventListener('mousemove', event => {event.item = x => event; this.touchMoveHandler(event)});
+                component.addEventListener('mouseup', event => {event.item = x => event; this.touchEndHandler(event)});
         }
     }
     registerCallBack(listenerType, predicate, callBack)

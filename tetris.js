@@ -157,6 +157,7 @@ class Field{
         {
             this.field.push({color:"#000000"});
         }
+        this.placementTimer = Date.now();
     }
     resize(width, height)
     {
@@ -558,8 +559,9 @@ class Field{
             //move piece down one 
             this.liveBlocked = false;
             this.livePiece.center[1] += 1;
+            this.placementTimer = Date.now();
         }
-        else if (this.liveBlocked)//otherwise place the current piece back on the field then draw new piece from queue
+        else if (Date.now() - this.placementTimer > 1000)//otherwise place the current piece back on the field then draw new piece from queue
         {
             //place current piece onto screen
             this.place(this.livePiece);
@@ -780,7 +782,6 @@ class SingleTouchListener
         component.addEventListener('touchend', event => this.touchEndHandler(event), false);
         if(mouseEmulation)
         {
-            
             component.addEventListener('mousedown', event => {event.changedTouches = {};event.changedTouches.item = x => event; this.touchStartHandler(event)});
             component.addEventListener('mousemove', event => {event.changedTouches = {};event.changedTouches.item = x => event; this.touchMoveHandler(event)});
             component.addEventListener('mouseup', event => {event.changedTouches = {};event.changedTouches.item = x => event; this.touchEndHandler(event)});

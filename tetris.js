@@ -559,7 +559,8 @@ class Field{
             this.livePiece.center[1] += 1;
             this.placementTimer = Date.now();
         }
-        else if (Date.now() - this.placementTimer > 1000)//otherwise place the current piece back on the field then draw new piece from queue
+        else if (Date.now() - this.placementTimer > 1000)
+        //otherwise wait x ms, then place the current piece back on the field then draw new piece from queue
         {
             //place current piece onto screen
             this.place(this.livePiece);

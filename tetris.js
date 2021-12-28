@@ -969,7 +969,8 @@ async function main()
         ctx.fillStyle = "#FFFFFF";
         ctx.fillRect(0,0,canvas.width,canvas.height)
         ctx.fillStyle = "#FF0000";
-        if(count % field.maxLevel > field.level ? (field.maxLevel - field.level) : 1 == 0)
+        const mod = field.maxLevel > field.level ? (field.maxLevel - field.level);
+        if(count % mod == 0)
             field.update()
         field.draw();
     }

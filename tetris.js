@@ -334,7 +334,7 @@ class Field{
             const type = this.livePiece.type;
             let old = this.pieceTypes.find(el => el.type === type);
             old.center = [this.w/2, 1];
-            if(this.holdPiece && this.holdPiece.type != "null")
+            if(this.holdPiece && this.holdPiece.type !== "null")
             {
                 this.livePiece = this.holdPiece;
                 this.holdPiece = old;
@@ -548,7 +548,7 @@ class Field{
         if(rowsCleared > 0)
             this.lastRowsCleared = rowsCleared;
         //leveling system
-        while(this.calcMaxScore(this.level) < this.score && this.level < this.maxLevel)
+        while(this.calcMaxScore(this.level) < this.score)
         {
             this.level++;
         }
@@ -964,12 +964,12 @@ async function main()
       });
     let count = 0;
     while(true){
-        await sleep(30);
+        await sleep(25);
         count++;
         ctx.fillStyle = "#FFFFFF";
         ctx.fillRect(0,0,canvas.width,canvas.height)
         ctx.fillStyle = "#FF0000";
-        if(count % (field.maxLevel - field.level) == 0)
+        if(count % field.maxLevel > field.level ? (field.maxLevel - field.level) : 1 == 0)
             field.update()
         field.draw();
     }

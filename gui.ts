@@ -350,7 +350,63 @@ export class RowRecord {
         this.height = height;
         this.element = element;
     }
-}
+};
+export interface UIState {
+    //render any ui elements to provided context
+    draw(ctx:CanvasRenderingContext2D, canvas:HTMLCanvasElement, x:number, y:number, width:number, height:number):void;
+    //pass keyboard events to any ui elements managed
+    handleKeyboardEvents(type:string, event:KeyboardEvent):void;
+    //pass touch events to any ui elements managed
+    handleTouchEvents(type:string, event:TouchMoveEvent):void;
+    //update state, and transition state, every tick new state will be assigned to current state
+    //to remain in previous state return this object
+    transition(delta_time:number):UIState;
+};
+
+export class StateManagedUI {
+    state:UIState;
+    constructor(state:UIState)
+    {
+        this.state = state;
+    }
+    draw(ctx:CanvasRenderingContext2D, canvas:HTMLCanvasElement, x:number, y:number, width:number, height:number):void
+    {
+        this.state.draw(ctx, canvas, x, y, width, height);
+    }
+    handleKeyboardEvents(type:string, event:KeyboardEvent):void
+    {
+        this.state.handleKeyboardEvents(type, event);
+    }
+    handleTouchEvents(type:string, event:TouchMoveEvent):void
+    {
+        this.state.handleTouchEvents(type, event);
+    }
+    transition(delta_time:number):void
+    {
+        this.state = this.state.transition(delta_time);
+    }
+};
+export class StateManagedUIElement implements UIState {
+    layouts:SimpleGridLayoutManager[];
+    constructor()
+    {
+        this.layouts = [];
+    }
+    draw(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, x: number, y: number, width: number, height: number): void {
+        this.layouts.forEach(layout => layout.draw(ctx));
+    }
+    handleKeyboardEvents(type: string, event: KeyboardEvent): void {
+        this.layouts.forEach(layout => layout.handleKeyBoardEvents(type, event));
+    }
+    handleTouchEvents(type: string, event: TouchMoveEvent): void {
+        this.layouts.forEach(layout => layout.handleTouchEvents(type, event));
+    }
+    transition(delta_time: number): UIState {
+        throw new Error("Method not implemented.");
+    }
+    
+    
+};
 export class SimpleGridLayoutManager implements GuiElement {
     
     elements:GuiElement[];
@@ -436,20 +492,20 @@ export class SimpleGridLayoutManager implements GuiElement {
             });
             e.translateEvent(e, this.x, this.y);
             if(record)
+            {
+                e.preventDefault();
+                e.translateEvent(e, -record.x - this.x, -record.y - this.y);
+                if(type !== "touchmove")
+                    record.element.activate();
+                record.element.handleTouchEvents(type, e);
+                e.translateEvent(e, record.x + this.x, record.y + this.y);
+                record.element.refresh();
+                this.elementTouched = record;
+                if(e.repaint)
                 {
-                    e.preventDefault();
-                    e.translateEvent(e, -record.x - this.x, -record.y - this.y);
-                    if(type !== "touchmove")
-                        record.element.activate();
-                    record.element.handleTouchEvents(type, e);
-                    e.translateEvent(e, record.x + this.x, record.y + this.y);
-                    record.element.refresh();
-                    this.elementTouched = record;
-                    if(e.repaint)
-                    {
-                        this.refreshCanvas();
-                    }
-                    this.lastTouched = index;
+                    this.refreshCanvas();
+                }
+                this.lastTouched = index;
             }
             
         }
@@ -660,12 +716,12 @@ export class GuiListItem extends SimpleGridLayoutManager {
     callBack:((e:any) => void) | null;
     constructor(text:string, state:boolean, pixelDim:number[], fontSize:number = 16, callBack:((e:any) => void) | null = () => {}, genericCallBack:((e:any) => void) | null = null, slideMoved:((event:SlideEvent) => void) | null = null, flags:number = GuiTextBox.bottom, genericTouchType:string = "touchend")
     {
-        super([20, 1], pixelDim);
+        super([200, 1], pixelDim);
         this.callBackType = genericTouchType;
         this.callBack = genericCallBack;
-        this.checkBox = new GuiCheckBox(callBack, pixelDim[1], pixelDim[1], state);
-        const width:number = (pixelDim[0] - fontSize * 2 - 10) >> (slideMoved ? 1: 0);
-        this.textBox = new GuiTextBox(false, width, null, fontSize, pixelDim[1], flags);
+        this.checkBox = new GuiCheckBox(callBack, pixelDim[0] / 5, pixelDim[1], state);
+        const width:number = (pixelDim[0] - this.checkBox.width())// >> (slideMoved ? 1: 0);
+        this.textBox = new GuiTextBox(true, width, null, fontSize, pixelDim[1], flags);
         this.textBox.setText(text);
         this.addElement(this.checkBox);
         this.addElement(this.textBox);
@@ -673,7 +729,7 @@ export class GuiListItem extends SimpleGridLayoutManager {
         {
             this.slider = new GuiSlider(1, [width, pixelDim[1]], slideMoved);
             this.sliderX = width + pixelDim[1];
-            this.addElement(this.slider);
+            //this.addElement(this.slider);
         }
         else
         {
@@ -683,6 +739,15 @@ export class GuiListItem extends SimpleGridLayoutManager {
     }
     handleTouchEvents(type: string, e: any): void {
         super.handleTouchEvents(type, e);
+        if(this.active() && type === this.callBackType)
+        {
+            e.item = this;
+            if(this.callBack)
+                this.callBack(e);
+        }
+    }
+    handleKeyBoardEvents(type: string, e: any): void {
+        super.handleKeyBoardEvents(type, e);
         if(this.active() && type === this.callBackType)
         {
             e.item = this;
@@ -703,8 +768,12 @@ export class SlideEvent {
         this.element = element;
     }
 }
+export class GuiCheckListError {
+
+};
 export class GuiCheckList implements GuiElement {
     limit:number;
+    pos:number[]
     list:GuiListItem[];
     dragItem:GuiListItem | null;
     dragItemLocation:number[];
@@ -713,15 +782,21 @@ export class GuiCheckList implements GuiElement {
     fontSize:number;
     focused:boolean;
     uniqueSelection:boolean;
+    callback_get_non_error_background_color:(layer:number) => RGB | null;
     swapElementsInParallelArray:((x1:number, x2:number) => void) | null;
+    get_error:(layer:number) => string | null;
     slideMoved:((event:SlideEvent) => void) | null;
-    constructor(matrixDim:number[], pixelDim:number[], fontSize:number, uniqueSelection:boolean, swap:((x1:number, x2:number) => void) | null = null, slideMoved:((event:SlideEvent) => void) | null = null)
+    constructor(matrixDim:number[], pixelDim:number[], fontSize:number, uniqueSelection:boolean, swap:((x1:number, x2:number) => void) | null = null, slideMoved:((event:SlideEvent) => void) | null = null, get_error:(layer:number)=>string|null,
+        callback_get_non_error_background_color:(layer:number) => RGB | null)
     {
+        this.get_error = get_error;
+        this.callback_get_non_error_background_color = callback_get_non_error_background_color;
         this.focused = true;
         this.uniqueSelection = uniqueSelection;
         this.fontSize = fontSize;
         this.layoutManager = new SimpleGridLayoutManager ([1,matrixDim[1]], pixelDim);
         this.list = [];
+        this.pos = [0, 0];
         this.limit = 0;
         this.dragItem = null;
         this.dragItemLocation = [-1, -1];
@@ -803,6 +878,10 @@ export class GuiCheckList implements GuiElement {
     draw(ctx:CanvasRenderingContext2D, x:number, y:number, offsetX:number, offsetY:number): void
     {
         //this.layoutManager.draw(ctx, x, y, offsetX, offsetY);
+        this.pos[0] = x;
+        this.pos[1] = y;
+        this.layoutManager.x = x;
+        this.layoutManager.y = y;
         const itemsPositions:RowRecord[] = this.layoutManager.elementsPositions;
         let offsetI:number = 0;
         for(let i = 0; i < itemsPositions.length; i++)
@@ -811,11 +890,66 @@ export class GuiCheckList implements GuiElement {
             {
                 offsetI++;
             }
+            const background_color:RGB | null = this.callback_get_non_error_background_color(i);
+            if(background_color)
+            {
+                const alpha = background_color.alpha();
+                background_color.setAlpha(140);
+                ctx.fillStyle = background_color.htmlRBGA();
+                background_color.setAlpha(alpha);
+                ctx.fillRect(x, y + offsetI * (this.height() / this.layoutManager.matrixDim[1]), this.width(), (this.height() / this.layoutManager.matrixDim[1]) - 5);
+            }
             this.list[i].draw(ctx, x, y + offsetI * (this.height() / this.layoutManager.matrixDim[1]), offsetX, offsetY);
             offsetI++;
+            const row_errors = this.get_error(i);
+            if(row_errors)
+            {
+                const font_size = 18;
+                ctx.fillStyle = new RGB(0, 0, 0, 200).htmlRBGA();
+                let error_row_offset = 2;
+                ctx.fillRect(x, y + (offsetI - error_row_offset) * (this.height() / this.layoutManager.matrixDim[1]), this.width(), this.height() / this.layoutManager.matrixDim[1]);
+
+                ctx.font = `${font_size}px Helvetica`;
+                ctx.fillStyle = "#FF0000";
+                ctx.strokeStyle = "#FFFFFF";
+                ctx.lineWidth = 3;
+                const text_width = ctx.measureText(row_errors).width;
+                if(text_width <= this.width())
+                {
+                    ctx.fillStyle = "#FF0000";
+                    ctx.strokeText(row_errors, x, y + font_size + (offsetI - error_row_offset) * (this.height() / this.layoutManager.matrixDim[1]), this.width());
+                    ctx.fillText(row_errors, x, y + font_size + (offsetI - error_row_offset) * (this.height() / this.layoutManager.matrixDim[1]), this.width());
+                }
+                else 
+                {
+                    const split_index = row_errors.indexOf(' ', Math.floor(row_errors.length / 2));
+                    let j = 1;
+                    let split_text = row_errors.substring(0, split_index);
+                    ctx.strokeText(split_text, x, y + j * font_size + (offsetI - error_row_offset) * (this.height() / this.layoutManager.matrixDim[1]), this.width());
+                    ctx.fillText(split_text, x, y + j++ * font_size + (offsetI - error_row_offset) * (this.height() / this.layoutManager.matrixDim[1]), this.width());
+                    split_text = row_errors.substring(split_index + 1);
+                    ctx.strokeText(split_text, x, y + j * font_size + (offsetI - error_row_offset) * (this.height() / this.layoutManager.matrixDim[1]), this.width());
+                    ctx.fillText(split_text, x, y + j * font_size + (offsetI - error_row_offset) * (this.height() / this.layoutManager.matrixDim[1]), this.width());
+                }
+                ctx.strokeStyle = "#FF0000";
+                ctx.strokeRect(x, y + (offsetI - error_row_offset) * (this.height() / this.layoutManager.matrixDim[1]), this.width(), this.height() / this.layoutManager.matrixDim[1]);
+                ctx.strokeRect(x, y + (offsetI - error_row_offset + 1) * (this.height() / this.layoutManager.matrixDim[1]), this.width(), this.height() / this.layoutManager.matrixDim[1] - 5);
+
+            }
         }
         if(this.dragItem)
+        {
+            const background_color:RGB | null = this.callback_get_non_error_background_color(this.dragItemInitialIndex);
+            if(background_color)
+            {
+                const alpha = background_color.alpha();
+                background_color.setAlpha(140);
+                ctx.fillStyle = background_color.htmlRBGA();
+                background_color.setAlpha(alpha);
+                ctx.fillRect(x + this.dragItemLocation[0] - this.dragItem.width() / 2, y + this.dragItemLocation[1] - this.dragItem.height() / 2, this.width(), (this.height() / this.layoutManager.matrixDim[1]) - 5);
+            }
             this.dragItem.draw(ctx, x + this.dragItemLocation[0] - this.dragItem.width() / 2, y + this.dragItemLocation[1] - this.dragItem.height() / 2, offsetX, offsetY);
+        }
     }
     handleKeyBoardEvents(type:string, e:any):void
     {
@@ -823,33 +957,25 @@ export class GuiCheckList implements GuiElement {
     }
     handleTouchEvents(type:string, e:any):void
     {
-        let checkedIndex:number = -1;
-        if(this.uniqueSelection)
-        {
-            for(let i = 0; i < this.list.length; i++) {
-                if(this.list[i].checkBox.checked)
-                {
-                    checkedIndex = i;
-                }
-            };
-            this.layoutManager.handleTouchEvents(type, e);
-            for(let i = 0; i < this.list.length; i++)
-            {
-                if(this.list[i].checkBox.checked && i !== checkedIndex)
-                {
-                    this.list[checkedIndex].checkBox.checked = false;
-                    this.list[checkedIndex].checkBox.refresh();
-                    break;
-                }     
-            }
-        }
-        else {
-            this.layoutManager.handleTouchEvents(type, e);
-        }
-        const clicked:number = Math.floor((e.touchPos[1] / this.height()) * this.layoutManager.matrixDim[1]);
+        this.layoutManager.activate();
+        e.translateEvent(e,  -this.pos[0], -this.pos[1]);
+        const clicked:number = Math.floor(((e.touchPos[1]) / this.height()) * this.layoutManager.matrixDim[1]);
         this.layoutManager.lastTouched = clicked > this.list.length ? this.list.length - 1 : clicked;
+        const element:RowRecord = this.layoutManager.elementsPositions[this.layoutManager.lastTouched];
+        
+        e.translateEvent(e,  this.pos[0], this.pos[1]);
+        if(element)
+        {
+            (<GuiListItem> element.element).elementsPositions.forEach(el => {
+                if(e.touchPos[0] < this.pos[0] + el.element.width() && e.touchPos[0] > this.pos[0] + el.x)
+                    el.element.handleTouchEvents(type, e);
+            });
+        }
+        this.layoutManager.deactivate();
         switch(type)
         {
+            case("touchstart"):
+            break;
             case("touchend"):
             if(this.dragItem)
             {
@@ -859,7 +985,7 @@ export class GuiCheckList implements GuiElement {
                     if(clicked > this.list.length)
                         this.swapElementsInParallelArray(this.dragItemInitialIndex, this.list.length - 1);
                     else
-                    this.swapElementsInParallelArray(this.dragItemInitialIndex, clicked);
+                        this.swapElementsInParallelArray(this.dragItemInitialIndex, clicked);
                 }
                 this.dragItem = null;
                 this.dragItemInitialIndex = -1;
@@ -892,6 +1018,27 @@ export class GuiCheckList implements GuiElement {
                 this.dragItemLocation[1] += e.deltaY;
             }
             break;
+        }
+
+        let checkedIndex:number = -1;
+        if(this.uniqueSelection)
+        {
+            for(let i = 0; i < this.list.length; i++) {
+                if(this.list[i].checkBox.checked)
+                {
+                    checkedIndex = i;
+                }
+            };
+            
+            
+            for(let i = 0; i < this.list.length; i++)
+            {
+                if(this.list[i].checkBox.checked && i !== checkedIndex)
+                {
+                    this.list[checkedIndex].checkBox.checked = false;
+                    this.list[checkedIndex].checkBox.refresh();
+                }     
+            }
         }
     }
     isLayoutManager():boolean
@@ -1211,15 +1358,18 @@ export class GuiButton implements GuiElement {
     }
     drawInternal(ctx:CanvasRenderingContext2D = this.ctx):void
     {
+        ctx.clearRect(0, 0, this.width(), this.height());
         const fs = ctx.fillStyle;
         this.setCtxState(ctx);
+        ctx.fillStyle = new RGB(0, 0, 0, 75).htmlRBGA();
         ctx.fillRect(0, 0, this.width(), this.height());
-        ctx.strokeRect(0, 0, this.width(), this.height());
+        
         ctx.fillStyle = "#000000";
         const textWidth:number = ctx.measureText(this.text).width;
         const textHeight:number = this.fontSize;
         ctx.strokeStyle = "#FFFFFF";
         ctx.lineWidth = 4;
+        ctx.strokeRect(0, 0, this.width(), this.height());
         if(textWidth < this.width() - 10)
         {
             ctx.strokeText(this.text, this.width() / 2 - textWidth / 2, this.height() / 2 + textHeight / 2, this.width());
@@ -1231,17 +1381,36 @@ export class GuiButton implements GuiElement {
             ctx.fillText(this.text, 10, this.height() / 2 + textHeight / 2, this.width() - 20);
         }
         ctx.fillStyle = fs;
+        ctx.strokeRect(0, 0, this.width(), this.height());
     } 
     draw(ctx:CanvasRenderingContext2D, x:number, y:number, offsetX:number = 0, offsetY:number = 0):void
     {
         ctx.drawImage(this.canvas, x + offsetX, y + offsetY);
-        if(!this.active())
-        {
-            ctx.fillStyle = new RGB(0, 0, 0, 125).htmlRBGA();
-            ctx.fillRect(x, y, this.width(), this.height());
-        }
     }
 };
+
+interface FilesHaver{
+    files:FileList;
+};
+export class GuiButtonFileOpener extends GuiButton {
+    constructor(callback:(binary:Int32Array) => void, text:string, width:number, height:number, fontSize = 12, pressedColor:RGB = new RGB(150, 150, 200, 255), unPressedColor:RGB = new RGB(255, 255, 255, 195), fontName:string = "Helvetica")
+    {
+        super(() => {
+            const input:HTMLInputElement = document.createElement('input');
+            input.type="file";
+            input.addEventListener('change', (event) => {
+                const fileList:FileList = (<FilesHaver> <Object> event.target).files;
+                const reader = new FileReader();
+                fileList[0].arrayBuffer().then((buffer) =>
+                  {
+                      const binary:Int32Array = new Int32Array(buffer);
+                      callback(binary);
+                  });
+              });
+            input.click();
+        }, text, width, height, fontSize, pressedColor, unPressedColor, fontName);
+    }
+}
 export class GuiCheckBox implements GuiElement {
 
     checked:boolean;
@@ -1298,6 +1467,7 @@ export class GuiCheckBox implements GuiElement {
     handleTouchEvents(type:string, e:any):void
     {
         if(this.active())
+        {
             switch(type)
             {
                 case("touchstart"):
@@ -1313,6 +1483,7 @@ export class GuiCheckBox implements GuiElement {
                     this.drawInternal();
                 break;
             }
+        }
             
     }
     active():boolean
@@ -1349,7 +1520,7 @@ export class GuiCheckBox implements GuiElement {
         const fs = ctx.fillStyle;
         this.setCtxState(ctx);
         ctx.clearRect(0, 0, this.width(), this.height());
-        ctx.fillRect(0, 0, this.width(), this.height());
+        //ctx.fillRect(0, 0, this.width(), this.height());
         ctx.fillStyle = "#000000";
         ctx.strokeStyle = "#000000";
         ctx.strokeRect(1, 1, this.canvas.width - 2, this.canvas.height - 2);
@@ -1443,7 +1614,7 @@ export class GuiTextBox implements GuiElement {
     outlineTextBox:boolean;
     validationCallback:((tb:TextBoxEvent) => boolean) | null;
     constructor(keyListener:boolean, width:number, submit:GuiButton | null = null, fontSize:number = 16, height:number = 2*fontSize, flags:number = GuiTextBox.default,
-        validationCallback:((event:TextBoxEvent) => boolean) | null = null, selectedColor:RGB = new RGB(80, 80, 220), unSelectedColor:RGB = new RGB(100, 100, 100), outline:boolean = true, fontName = "textBox_default", customFontFace:FontFace | null = null)
+        validationCallback:((event:TextBoxEvent) => boolean) | null = null, selectedColor:RGB = new RGB(80, 80, 220), unSelectedColor:RGB = new RGB(100, 100, 100), outline:boolean = true, fontName = "Helvetica", customFontFace:FontFace | null = null)
     {
         this.handleKeyEvents = keyListener;
         this.outlineTextBox = outline;
@@ -1470,19 +1641,23 @@ export class GuiTextBox implements GuiElement {
         this.dimensions = [width, height];
         this.fontSize = fontSize;
         this.fontName = fontName;
+
+        const customFontName = "textBox_default"
         {
             if(customFontFace){
                 this.font = customFontFace;
                 this.font.family
             }
             else
-                this.font = new FontFace(fontName, 'url(/web/fonts/Minecraft.ttf)');
+                this.font = new FontFace(customFontName, 'url(/web/fonts/Minecraft.ttf)');
             this.font.load().then((loaded_face) =>{
+                this.fontName = fontName
                 document.fonts.add(loaded_face);
                 this.drawInternalAndClear();
             }, (error:Error) => {
-                this.font = new FontFace(fontName, 'url(/fonts/Minecraft.ttf)');
+                this.font = new FontFace(customFontName, 'url(/fonts/Minecraft.ttf)');
                 this.font.load().then((loaded_face:any) => {
+                        this.fontName = fontName
                         document.fonts.add(loaded_face);
                         this.refresh();
                     }, (error:Error) => {
@@ -1524,6 +1699,29 @@ export class GuiTextBox implements GuiElement {
     {
         return (this.flags & GuiTextBox.verticalAlignmentFlagsMask) === GuiTextBox.bottom;
     }
+    insert_char(char:string, e:KeyboardEvent):void
+    {
+        const oldText = this.text;
+        const oldCursor = this.cursor;
+        this.text = this.text.substring(0, this.cursor) + char + this.text.substring(this.cursor, this.text.length);
+        this.cursor++;
+        this.calcNumber();
+        if(this.validationCallback)
+        {
+            if(!this.validationCallback({textbox:this, event:e, oldCursor:oldCursor, oldText:oldText}))
+            {
+                this.text = oldText;
+                this.cursor = oldCursor;
+            }
+            else {
+                this.drawInternalAndClear();
+            }
+        }
+        else
+        {
+            this.drawInternalAndClear();
+        }
+    }
     handleKeyBoardEvents(type:string, e:any):void
     {
         let preventDefault:boolean = false;
@@ -1531,90 +1729,157 @@ export class GuiTextBox implements GuiElement {
             preventDefault = true;
             const oldText:string = this.text;
             const oldCursor:number = this.cursor;
-            switch(type)
+            console.log(e.code)
+            if(e.keysHeld["ShiftLeft"] || e.keysHeld["ShiftRight"])
             {
-                case("keydown"):
+                if(type === "keydown")
                 switch(e.code)
                 {
-                    case("NumpadEnter"):
-                    case("Enter"):
-                    this.deactivate();
-                    if(this.submissionButton)
-                    {
-                        this.submissionButton.activate();
-                        this.submissionButton.handleKeyBoardEvents(type, e);
-                    }
-                    break;
-                    case("Space"):
-                        this.text = this.text.substring(0, this.cursor) + ' ' + this.text.substring(this.cursor, this.text.length);
-                        this.cursor++;
-                    break;
                     case("Backspace"):
-                        this.text = this.text.substring(0, this.cursor-1) + this.text.substring(this.cursor, this.text.length);
-                        this.cursor -= +(this.cursor>0);
+                    e.keysHeld["ShiftLeft"] = null;
+                    e.keysHeld["ShiftRight"] = null;
                     break;
-                    case("Delete"):
-                        this.text = this.text.substring(0, this.cursor) + this.text.substring(this.cursor+1, this.text.length);
+                    case("Equal"):
+                    this.insert_char("+", e);
                     break;
-                    case("ArrowLeft"):
-                        this.cursor -= +(this.cursor > 0);
+                    case("Digit5"):
+                    this.insert_char("%", e);
                     break;
-                    case("ArrowRight"):
-                        this.cursor += +(this.cursor < this.text.length);
+                    case("Digit6"):
+                    this.insert_char("^", e);
                     break;
-                    case("ArrowUp"):
-                        this.cursor = 0;
+                    case("Digit7"):
+                    this.insert_char("&", e);
                     break;
-                    case("ArrowDown"):
-                        this.cursor = (this.text.length);
+                    case("Digit8"):
+                    this.insert_char("*", e);
                     break;
-                    case("Period"):
-                    this.text = this.text.substring(0, this.cursor) + "." + this.text.substring(this.cursor, this.text.length);
-                    this.cursor++;
+                    case("Digit9"):
+                    this.insert_char("(", e);
                     break;
-                    case("Comma"):
-                    this.text = this.text.substring(0, this.cursor) + "," + this.text.substring(this.cursor, this.text.length);
-                    this.cursor++;
+                    case("Digit0"):
+                    this.insert_char(")", e);
+                    break;
+                    case("BracketLeft"):
+                    this.insert_char("{", e);
+                    break;
+                    case("BracketRight"):
+                    this.insert_char("}", e);
                     break;
                     default:
-                    {
                         let letter:string = e.code.substring(e.code.length - 1);
-                        if(!e.keysHeld["ShiftRight"] && !e.keysHeld["ShiftLeft"])
-                            letter = letter.toLowerCase();
                         if((<any> GuiTextBox.textLookup)[e.code] || (<any> GuiTextBox.numbers)[e.code])
-                        {
-                            this.text = this.text.substring(0, this.cursor) + letter + this.text.substring(this.cursor, this.text.length);
-                            this.cursor++;
-                        }
-                        else if((<any> GuiTextBox.specialChars)[e.code])
-                        {
-                            //todo
-                        }
-                        else if(e.code.substring(0,"Numpad".length) === "Numpad")
-                        {
-                            this.text = this.text.substring(0, this.cursor) + letter + this.text.substring(this.cursor, this.text.length);
-                            this.cursor++;
-                        }
-
-                    }
+                            {
+                                this.insert_char(letter, e);
+                            }
+                    break;
                 }
-                this.calcNumber();
-                if(this.validationCallback)
+            }
+            else
+            {
+                switch(type)
                 {
-                    if(!this.validationCallback({textbox:this, event:e, oldCursor:oldCursor, oldText:oldText}))
+                    case("keydown"):
+                    switch(e.code)
                     {
-                        this.text = oldText;
-                        this.cursor = oldCursor;
+                        case("Minus"):
+                        this.insert_char("-", e);
+                        break;
+                        case("Slash"):
+                        this.insert_char("/", e);
+                        break;
+                        case("Equal"):
+                        this.insert_char("=", e);
+                        break;
+                        case("NumpadEnter"):
+                        case("Enter"):
+                        this.deactivate();
+                        if(this.submissionButton)
+                        {
+                            this.submissionButton.activate();
+                            this.submissionButton.handleKeyBoardEvents(type, e);
+                        }
+                        break;
+                        case("BracketLeft"):
+                        this.insert_char("[", e);
+                        break;
+                        case("BracketRight"):
+                        this.insert_char("]", e);
+                        break;
+                        case("Semicolon"):
+                            this.insert_char(";", e);
+                        break;
+                        case("Space"):
+                            this.text = this.text.substring(0, this.cursor) + ' ' + this.text.substring(this.cursor, this.text.length);
+                            this.cursor++;
+                        break;
+                        case("Backspace"):
+                            this.text = this.text.substring(0, this.cursor-1) + this.text.substring(this.cursor, this.text.length);
+                            this.cursor -= +(this.cursor>0);
+                        break;
+                        case("Delete"):
+                            this.text = this.text.substring(0, this.cursor) + this.text.substring(this.cursor+1, this.text.length);
+                        break;
+                        case("ArrowLeft"):
+                            this.cursor -= +(this.cursor > 0);
+                        break;
+                        case("ArrowRight"):
+                            this.cursor += +(this.cursor < this.text.length);
+                        break;
+                        case("ArrowUp"):
+                            this.cursor = 0;
+                        break;
+                        case("ArrowDown"):
+                            this.cursor = (this.text.length);
+                        break;
+                        case("Period"):
+                        this.text = this.text.substring(0, this.cursor) + "." + this.text.substring(this.cursor, this.text.length);
+                        this.cursor++;
+                        break;
+                        case("Comma"):
+                        this.text = this.text.substring(0, this.cursor) + "," + this.text.substring(this.cursor, this.text.length);
+                        this.cursor++;
+                        break;
+                        default:
+                        {
+                            let letter:string = e.code.substring(e.code.length - 1);
+                            if(!e.keysHeld["ShiftRight"] && !e.keysHeld["ShiftLeft"])
+                                letter = letter.toLowerCase();
+                            if((<any> GuiTextBox.textLookup)[e.code] || (<any> GuiTextBox.numbers)[e.code])
+                            {
+                                this.text = this.text.substring(0, this.cursor) + letter + this.text.substring(this.cursor, this.text.length);
+                                this.cursor++;
+                            }
+                            else if((<any> GuiTextBox.specialChars)[e.code])
+                            {
+                                //todo
+                            }
+                            else if(e.code.substring(0,"Numpad".length) === "Numpad")
+                            {
+                                this.text = this.text.substring(0, this.cursor) + letter + this.text.substring(this.cursor, this.text.length);
+                                this.cursor++;
+                            }
+    
+                        }
                     }
-                    else {
+                    this.calcNumber();
+                    if(this.validationCallback)
+                    {
+                        if(!this.validationCallback({textbox:this, event:e, oldCursor:oldCursor, oldText:oldText}))
+                        {
+                            this.text = oldText;
+                            this.cursor = oldCursor;
+                        }
+                        else {
+                            this.drawInternalAndClear();
+                        }
+                    }
+                    else
+                    {
                         this.drawInternalAndClear();
                     }
+                        
                 }
-                else
-                {
-                    this.drawInternalAndClear();
-                }
-                    
             }
         }
         if(preventDefault)
@@ -2386,7 +2651,6 @@ export class Sprite {
     }
     copyImage(image:HTMLImageElement):void
     {
-        console.log(image.width, image.height)
         this.width = image.width;
         this.height = image.height;
         this.image.width = this.width;
@@ -2634,23 +2898,35 @@ export class SpriteAnimation {
         }
     }
 };
+let width:number = Math.min(
+    document.body.scrollWidth,
+    document.documentElement.scrollWidth,
+    document.body.offsetWidth,
+    document.documentElement.offsetWidth,
+    document.documentElement.clientWidth
+  );
+let height:number = Math.min(
+    //document.body.scrollHeight,
+    //document.documentElement.scrollHeight,
+    //document.body.offsetHeight,
+    //document.documentElement.offsetHeight//,
+    document.body.clientHeight
+  );
+window.addEventListener("resize", () => {
+    width = Math.min(
+        document.body.scrollWidth,
+        document.documentElement.scrollWidth,
+        document.body.offsetWidth,
+        document.documentElement.offsetWidth,
+        document.body.clientWidth
+      );
+    height = document.body.clientHeight;
+});
 export function getWidth():number {
-    return Math.min(
-      document.body.scrollWidth,
-      document.documentElement.scrollWidth,
-      document.body.offsetWidth,
-      document.documentElement.offsetWidth,
-      document.documentElement.clientWidth
-    );
+    return width;
 }
 export function getHeight():number {
-      return Math.min(
-        //document.body.scrollHeight,
-        //document.documentElement.scrollHeight,
-        //document.body.offsetHeight,
-        //document.documentElement.offsetHeight//,
-        document.documentElement.clientHeight
-      );
+    return height;
 }
 export class RegularPolygon {
     points:number[];

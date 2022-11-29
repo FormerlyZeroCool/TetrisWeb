@@ -278,6 +278,47 @@ export class RowRecord {
         this.element = element;
     }
 }
+<<<<<<< HEAD
+;
+;
+export class StateManagedUI {
+    constructor(state) {
+        this.state = state;
+    }
+    draw(ctx, canvas, x, y, width, height) {
+        this.state.draw(ctx, canvas, x, y, width, height);
+    }
+    handleKeyboardEvents(type, event) {
+        this.state.handleKeyboardEvents(type, event);
+    }
+    handleTouchEvents(type, event) {
+        this.state.handleTouchEvents(type, event);
+    }
+    transition(delta_time) {
+        this.state = this.state.transition(delta_time);
+    }
+}
+;
+export class StateManagedUIElement {
+    constructor() {
+        this.layouts = [];
+    }
+    draw(ctx, canvas, x, y, width, height) {
+        this.layouts.forEach(layout => layout.draw(ctx));
+    }
+    handleKeyboardEvents(type, event) {
+        this.layouts.forEach(layout => layout.handleKeyBoardEvents(type, event));
+    }
+    handleTouchEvents(type, event) {
+        this.layouts.forEach(layout => layout.handleTouchEvents(type, event));
+    }
+    transition(delta_time) {
+        throw new Error("Method not implemented.");
+    }
+}
+;
+=======
+>>>>>>> e3b2b3fbb56e7ba491485ca10d9bee18415f7498
 export class SimpleGridLayoutManager {
     constructor(matrixDim, pixelDim, x = 0, y = 0) {
         this.lastTouched = 0;
@@ -517,19 +558,32 @@ export class ScrollingGridLayoutManager extends SimpleGridLayoutManager {
 ;
 export class GuiListItem extends SimpleGridLayoutManager {
     constructor(text, state, pixelDim, fontSize = 16, callBack = () => { }, genericCallBack = null, slideMoved = null, flags = GuiTextBox.bottom, genericTouchType = "touchend") {
+<<<<<<< HEAD
+        super([200, 1], pixelDim);
+        this.callBackType = genericTouchType;
+        this.callBack = genericCallBack;
+        this.checkBox = new GuiCheckBox(callBack, pixelDim[0] / 5, pixelDim[1], state);
+        const width = (pixelDim[0] - this.checkBox.width()); // >> (slideMoved ? 1: 0);
+        this.textBox = new GuiTextBox(true, width, null, fontSize, pixelDim[1], flags);
+=======
         super([20, 1], pixelDim);
         this.callBackType = genericTouchType;
         this.callBack = genericCallBack;
         this.checkBox = new GuiCheckBox(callBack, pixelDim[1], pixelDim[1], state);
         const width = (pixelDim[0] - fontSize * 2 - 10) >> (slideMoved ? 1 : 0);
         this.textBox = new GuiTextBox(false, width, null, fontSize, pixelDim[1], flags);
+>>>>>>> e3b2b3fbb56e7ba491485ca10d9bee18415f7498
         this.textBox.setText(text);
         this.addElement(this.checkBox);
         this.addElement(this.textBox);
         if (slideMoved) {
             this.slider = new GuiSlider(1, [width, pixelDim[1]], slideMoved);
             this.sliderX = width + pixelDim[1];
+<<<<<<< HEAD
+            //this.addElement(this.slider);
+=======
             this.addElement(this.slider);
+>>>>>>> e3b2b3fbb56e7ba491485ca10d9bee18415f7498
         }
         else {
             this.slider = null;
@@ -544,6 +598,17 @@ export class GuiListItem extends SimpleGridLayoutManager {
                 this.callBack(e);
         }
     }
+<<<<<<< HEAD
+    handleKeyBoardEvents(type, e) {
+        super.handleKeyBoardEvents(type, e);
+        if (this.active() && type === this.callBackType) {
+            e.item = this;
+            if (this.callBack)
+                this.callBack(e);
+        }
+    }
+=======
+>>>>>>> e3b2b3fbb56e7ba491485ca10d9bee18415f7498
     state() {
         return this.checkBox.checked;
     }
@@ -555,13 +620,27 @@ export class SlideEvent {
         this.element = element;
     }
 }
+<<<<<<< HEAD
+export class GuiCheckListError {
+}
+;
+export class GuiCheckList {
+    constructor(matrixDim, pixelDim, fontSize, uniqueSelection, swap = null, slideMoved = null, get_error, callback_get_non_error_background_color) {
+        this.get_error = get_error;
+        this.callback_get_non_error_background_color = callback_get_non_error_background_color;
+=======
 export class GuiCheckList {
     constructor(matrixDim, pixelDim, fontSize, uniqueSelection, swap = null, slideMoved = null) {
+>>>>>>> e3b2b3fbb56e7ba491485ca10d9bee18415f7498
         this.focused = true;
         this.uniqueSelection = uniqueSelection;
         this.fontSize = fontSize;
         this.layoutManager = new SimpleGridLayoutManager([1, matrixDim[1]], pixelDim);
         this.list = [];
+<<<<<<< HEAD
+        this.pos = [0, 0];
+=======
+>>>>>>> e3b2b3fbb56e7ba491485ca10d9bee18415f7498
         this.limit = 0;
         this.dragItem = null;
         this.dragItemLocation = [-1, -1];
@@ -627,22 +706,102 @@ export class GuiCheckList {
     }
     draw(ctx, x, y, offsetX, offsetY) {
         //this.layoutManager.draw(ctx, x, y, offsetX, offsetY);
+<<<<<<< HEAD
+        this.pos[0] = x;
+        this.pos[1] = y;
+        this.layoutManager.x = x;
+        this.layoutManager.y = y;
+=======
+>>>>>>> e3b2b3fbb56e7ba491485ca10d9bee18415f7498
         const itemsPositions = this.layoutManager.elementsPositions;
         let offsetI = 0;
         for (let i = 0; i < itemsPositions.length; i++) {
             if (this.dragItem && this.dragItemLocation[1] !== -1 && i === Math.floor((this.dragItemLocation[1] / this.height()) * this.layoutManager.matrixDim[1])) {
                 offsetI++;
             }
+<<<<<<< HEAD
+            const background_color = this.callback_get_non_error_background_color(i);
+            if (background_color) {
+                const alpha = background_color.alpha();
+                background_color.setAlpha(140);
+                ctx.fillStyle = background_color.htmlRBGA();
+                background_color.setAlpha(alpha);
+                ctx.fillRect(x, y + offsetI * (this.height() / this.layoutManager.matrixDim[1]), this.width(), (this.height() / this.layoutManager.matrixDim[1]) - 5);
+            }
+            this.list[i].draw(ctx, x, y + offsetI * (this.height() / this.layoutManager.matrixDim[1]), offsetX, offsetY);
+            offsetI++;
+            const row_errors = this.get_error(i);
+            if (row_errors) {
+                const font_size = 18;
+                ctx.fillStyle = new RGB(0, 0, 0, 200).htmlRBGA();
+                let error_row_offset = 2;
+                ctx.fillRect(x, y + (offsetI - error_row_offset) * (this.height() / this.layoutManager.matrixDim[1]), this.width(), this.height() / this.layoutManager.matrixDim[1]);
+                ctx.font = `${font_size}px Helvetica`;
+                ctx.fillStyle = "#FF0000";
+                ctx.strokeStyle = "#FFFFFF";
+                ctx.lineWidth = 3;
+                const text_width = ctx.measureText(row_errors).width;
+                if (text_width <= this.width()) {
+                    ctx.fillStyle = "#FF0000";
+                    ctx.strokeText(row_errors, x, y + font_size + (offsetI - error_row_offset) * (this.height() / this.layoutManager.matrixDim[1]), this.width());
+                    ctx.fillText(row_errors, x, y + font_size + (offsetI - error_row_offset) * (this.height() / this.layoutManager.matrixDim[1]), this.width());
+                }
+                else {
+                    const split_index = row_errors.indexOf(' ', Math.floor(row_errors.length / 2));
+                    let j = 1;
+                    let split_text = row_errors.substring(0, split_index);
+                    ctx.strokeText(split_text, x, y + j * font_size + (offsetI - error_row_offset) * (this.height() / this.layoutManager.matrixDim[1]), this.width());
+                    ctx.fillText(split_text, x, y + j++ * font_size + (offsetI - error_row_offset) * (this.height() / this.layoutManager.matrixDim[1]), this.width());
+                    split_text = row_errors.substring(split_index + 1);
+                    ctx.strokeText(split_text, x, y + j * font_size + (offsetI - error_row_offset) * (this.height() / this.layoutManager.matrixDim[1]), this.width());
+                    ctx.fillText(split_text, x, y + j * font_size + (offsetI - error_row_offset) * (this.height() / this.layoutManager.matrixDim[1]), this.width());
+                }
+                ctx.strokeStyle = "#FF0000";
+                ctx.strokeRect(x, y + (offsetI - error_row_offset) * (this.height() / this.layoutManager.matrixDim[1]), this.width(), this.height() / this.layoutManager.matrixDim[1]);
+                ctx.strokeRect(x, y + (offsetI - error_row_offset + 1) * (this.height() / this.layoutManager.matrixDim[1]), this.width(), this.height() / this.layoutManager.matrixDim[1] - 5);
+            }
+        }
+        if (this.dragItem) {
+            const background_color = this.callback_get_non_error_background_color(this.dragItemInitialIndex);
+            if (background_color) {
+                const alpha = background_color.alpha();
+                background_color.setAlpha(140);
+                ctx.fillStyle = background_color.htmlRBGA();
+                background_color.setAlpha(alpha);
+                ctx.fillRect(x + this.dragItemLocation[0] - this.dragItem.width() / 2, y + this.dragItemLocation[1] - this.dragItem.height() / 2, this.width(), (this.height() / this.layoutManager.matrixDim[1]) - 5);
+            }
+            this.dragItem.draw(ctx, x + this.dragItemLocation[0] - this.dragItem.width() / 2, y + this.dragItemLocation[1] - this.dragItem.height() / 2, offsetX, offsetY);
+        }
+=======
             this.list[i].draw(ctx, x, y + offsetI * (this.height() / this.layoutManager.matrixDim[1]), offsetX, offsetY);
             offsetI++;
         }
         if (this.dragItem)
             this.dragItem.draw(ctx, x + this.dragItemLocation[0] - this.dragItem.width() / 2, y + this.dragItemLocation[1] - this.dragItem.height() / 2, offsetX, offsetY);
+>>>>>>> e3b2b3fbb56e7ba491485ca10d9bee18415f7498
     }
     handleKeyBoardEvents(type, e) {
         this.layoutManager.handleKeyBoardEvents(type, e);
     }
     handleTouchEvents(type, e) {
+<<<<<<< HEAD
+        this.layoutManager.activate();
+        e.translateEvent(e, -this.pos[0], -this.pos[1]);
+        const clicked = Math.floor(((e.touchPos[1]) / this.height()) * this.layoutManager.matrixDim[1]);
+        this.layoutManager.lastTouched = clicked > this.list.length ? this.list.length - 1 : clicked;
+        const element = this.layoutManager.elementsPositions[this.layoutManager.lastTouched];
+        e.translateEvent(e, this.pos[0], this.pos[1]);
+        if (element) {
+            element.element.elementsPositions.forEach(el => {
+                if (e.touchPos[0] < this.pos[0] + el.element.width() && e.touchPos[0] > this.pos[0] + el.x)
+                    el.element.handleTouchEvents(type, e);
+            });
+        }
+        this.layoutManager.deactivate();
+        switch (type) {
+            case ("touchstart"):
+                break;
+=======
         let checkedIndex = -1;
         if (this.uniqueSelection) {
             for (let i = 0; i < this.list.length; i++) {
@@ -666,6 +825,7 @@ export class GuiCheckList {
         const clicked = Math.floor((e.touchPos[1] / this.height()) * this.layoutManager.matrixDim[1]);
         this.layoutManager.lastTouched = clicked > this.list.length ? this.list.length - 1 : clicked;
         switch (type) {
+>>>>>>> e3b2b3fbb56e7ba491485ca10d9bee18415f7498
             case ("touchend"):
                 if (this.dragItem) {
                     this.list.splice(clicked, 0, this.dragItem);
@@ -703,6 +863,24 @@ export class GuiCheckList {
                 }
                 break;
         }
+<<<<<<< HEAD
+        let checkedIndex = -1;
+        if (this.uniqueSelection) {
+            for (let i = 0; i < this.list.length; i++) {
+                if (this.list[i].checkBox.checked) {
+                    checkedIndex = i;
+                }
+            }
+            ;
+            for (let i = 0; i < this.list.length; i++) {
+                if (this.list[i].checkBox.checked && i !== checkedIndex) {
+                    this.list[checkedIndex].checkBox.checked = false;
+                    this.list[checkedIndex].checkBox.refresh();
+                }
+            }
+        }
+=======
+>>>>>>> e3b2b3fbb56e7ba491485ca10d9bee18415f7498
     }
     isLayoutManager() {
         return false;
@@ -954,15 +1132,27 @@ export class GuiButton {
         this.drawInternal();
     }
     drawInternal(ctx = this.ctx) {
+<<<<<<< HEAD
+        ctx.clearRect(0, 0, this.width(), this.height());
+        const fs = ctx.fillStyle;
+        this.setCtxState(ctx);
+        ctx.fillStyle = new RGB(0, 0, 0, 75).htmlRBGA();
+        ctx.fillRect(0, 0, this.width(), this.height());
+=======
         const fs = ctx.fillStyle;
         this.setCtxState(ctx);
         ctx.fillRect(0, 0, this.width(), this.height());
         ctx.strokeRect(0, 0, this.width(), this.height());
+>>>>>>> e3b2b3fbb56e7ba491485ca10d9bee18415f7498
         ctx.fillStyle = "#000000";
         const textWidth = ctx.measureText(this.text).width;
         const textHeight = this.fontSize;
         ctx.strokeStyle = "#FFFFFF";
         ctx.lineWidth = 4;
+<<<<<<< HEAD
+        ctx.strokeRect(0, 0, this.width(), this.height());
+=======
+>>>>>>> e3b2b3fbb56e7ba491485ca10d9bee18415f7498
         if (textWidth < this.width() - 10) {
             ctx.strokeText(this.text, this.width() / 2 - textWidth / 2, this.height() / 2 + textHeight / 2, this.width());
             ctx.fillText(this.text, this.width() / 2 - textWidth / 2, this.height() / 2 + textHeight / 2, this.width());
@@ -972,6 +1162,33 @@ export class GuiButton {
             ctx.fillText(this.text, 10, this.height() / 2 + textHeight / 2, this.width() - 20);
         }
         ctx.fillStyle = fs;
+<<<<<<< HEAD
+        ctx.strokeRect(0, 0, this.width(), this.height());
+    }
+    draw(ctx, x, y, offsetX = 0, offsetY = 0) {
+        ctx.drawImage(this.canvas, x + offsetX, y + offsetY);
+    }
+}
+;
+;
+export class GuiButtonFileOpener extends GuiButton {
+    constructor(callback, text, width, height, fontSize = 12, pressedColor = new RGB(150, 150, 200, 255), unPressedColor = new RGB(255, 255, 255, 195), fontName = "Helvetica") {
+        super(() => {
+            const input = document.createElement('input');
+            input.type = "file";
+            input.addEventListener('change', (event) => {
+                const fileList = event.target.files;
+                const reader = new FileReader();
+                fileList[0].arrayBuffer().then((buffer) => {
+                    const binary = new Int32Array(buffer);
+                    callback(binary);
+                });
+            });
+            input.click();
+        }, text, width, height, fontSize, pressedColor, unPressedColor, fontName);
+    }
+}
+=======
     }
     draw(ctx, x, y, offsetX = 0, offsetY = 0) {
         ctx.drawImage(this.canvas, x + offsetX, y + offsetY);
@@ -982,6 +1199,7 @@ export class GuiButton {
     }
 }
 ;
+>>>>>>> e3b2b3fbb56e7ba491485ca10d9bee18415f7498
 export class GuiCheckBox {
     constructor(callBack, width = 50, height = 50, checked = false, unPressedColor = new RGB(255, 255, 255, 0), pressedColor = new RGB(150, 150, 200, 255), fontSize = height - 10) {
         this.checked = checked;
@@ -1022,7 +1240,11 @@ export class GuiCheckBox {
         return false;
     }
     handleTouchEvents(type, e) {
+<<<<<<< HEAD
+        if (this.active()) {
+=======
         if (this.active())
+>>>>>>> e3b2b3fbb56e7ba491485ca10d9bee18415f7498
             switch (type) {
                 case ("touchstart"):
                     this.pressed = true;
@@ -1037,6 +1259,10 @@ export class GuiCheckBox {
                     this.drawInternal();
                     break;
             }
+<<<<<<< HEAD
+        }
+=======
+>>>>>>> e3b2b3fbb56e7ba491485ca10d9bee18415f7498
     }
     active() {
         return this.focused;
@@ -1067,7 +1293,11 @@ export class GuiCheckBox {
         const fs = ctx.fillStyle;
         this.setCtxState(ctx);
         ctx.clearRect(0, 0, this.width(), this.height());
+<<<<<<< HEAD
+        //ctx.fillRect(0, 0, this.width(), this.height());
+=======
         ctx.fillRect(0, 0, this.width(), this.height());
+>>>>>>> e3b2b3fbb56e7ba491485ca10d9bee18415f7498
         ctx.fillStyle = "#000000";
         ctx.strokeStyle = "#000000";
         ctx.strokeRect(1, 1, this.canvas.width - 2, this.canvas.height - 2);
@@ -1108,7 +1338,11 @@ export class Optional {
 ;
 ;
 export class GuiTextBox {
+<<<<<<< HEAD
+    constructor(keyListener, width, submit = null, fontSize = 16, height = 2 * fontSize, flags = GuiTextBox.default, validationCallback = null, selectedColor = new RGB(80, 80, 220), unSelectedColor = new RGB(100, 100, 100), outline = true, fontName = "Helvetica", customFontFace = null) {
+=======
     constructor(keyListener, width, submit = null, fontSize = 16, height = 2 * fontSize, flags = GuiTextBox.default, validationCallback = null, selectedColor = new RGB(80, 80, 220), unSelectedColor = new RGB(100, 100, 100), outline = true, fontName = "textBox_default", customFontFace = null) {
+>>>>>>> e3b2b3fbb56e7ba491485ca10d9bee18415f7498
         this.handleKeyEvents = keyListener;
         this.outlineTextBox = outline;
         this.validationCallback = validationCallback;
@@ -1134,12 +1368,27 @@ export class GuiTextBox {
         this.dimensions = [width, height];
         this.fontSize = fontSize;
         this.fontName = fontName;
+<<<<<<< HEAD
+        const customFontName = "textBox_default";
+=======
+>>>>>>> e3b2b3fbb56e7ba491485ca10d9bee18415f7498
         {
             if (customFontFace) {
                 this.font = customFontFace;
                 this.font.family;
             }
             else
+<<<<<<< HEAD
+                this.font = new FontFace(customFontName, 'url(/web/fonts/Minecraft.ttf)');
+            this.font.load().then((loaded_face) => {
+                this.fontName = fontName;
+                document.fonts.add(loaded_face);
+                this.drawInternalAndClear();
+            }, (error) => {
+                this.font = new FontFace(customFontName, 'url(/fonts/Minecraft.ttf)');
+                this.font.load().then((loaded_face) => {
+                    this.fontName = fontName;
+=======
                 this.font = new FontFace(fontName, 'url(/web/fonts/Minecraft.ttf)');
             this.font.load().then((loaded_face) => {
                 document.fonts.add(loaded_face);
@@ -1147,6 +1396,7 @@ export class GuiTextBox {
             }, (error) => {
                 this.font = new FontFace(fontName, 'url(/fonts/Minecraft.ttf)');
                 this.font.load().then((loaded_face) => {
+>>>>>>> e3b2b3fbb56e7ba491485ca10d9bee18415f7498
                     document.fonts.add(loaded_face);
                     this.refresh();
                 }, (error) => {
@@ -1185,12 +1435,167 @@ export class GuiTextBox {
     bottom() {
         return (this.flags & GuiTextBox.verticalAlignmentFlagsMask) === GuiTextBox.bottom;
     }
+<<<<<<< HEAD
+    insert_char(char, e) {
+        const oldText = this.text;
+        const oldCursor = this.cursor;
+        this.text = this.text.substring(0, this.cursor) + char + this.text.substring(this.cursor, this.text.length);
+        this.cursor++;
+        this.calcNumber();
+        if (this.validationCallback) {
+            if (!this.validationCallback({ textbox: this, event: e, oldCursor: oldCursor, oldText: oldText })) {
+                this.text = oldText;
+                this.cursor = oldCursor;
+            }
+            else {
+                this.drawInternalAndClear();
+            }
+        }
+        else {
+            this.drawInternalAndClear();
+        }
+    }
+=======
+>>>>>>> e3b2b3fbb56e7ba491485ca10d9bee18415f7498
     handleKeyBoardEvents(type, e) {
         let preventDefault = false;
         if (this.active() && this.handleKeyEvents) {
             preventDefault = true;
             const oldText = this.text;
             const oldCursor = this.cursor;
+<<<<<<< HEAD
+            console.log(e.code);
+            if (e.keysHeld["ShiftLeft"] || e.keysHeld["ShiftRight"]) {
+                if (type === "keydown")
+                    switch (e.code) {
+                        case ("Backspace"):
+                            e.keysHeld["ShiftLeft"] = null;
+                            e.keysHeld["ShiftRight"] = null;
+                            break;
+                        case ("Equal"):
+                            this.insert_char("+", e);
+                            break;
+                        case ("Digit5"):
+                            this.insert_char("%", e);
+                            break;
+                        case ("Digit6"):
+                            this.insert_char("^", e);
+                            break;
+                        case ("Digit7"):
+                            this.insert_char("&", e);
+                            break;
+                        case ("Digit8"):
+                            this.insert_char("*", e);
+                            break;
+                        case ("Digit9"):
+                            this.insert_char("(", e);
+                            break;
+                        case ("Digit0"):
+                            this.insert_char(")", e);
+                            break;
+                        case ("BracketLeft"):
+                            this.insert_char("{", e);
+                            break;
+                        case ("BracketRight"):
+                            this.insert_char("}", e);
+                            break;
+                        default:
+                            let letter = e.code.substring(e.code.length - 1);
+                            if (GuiTextBox.textLookup[e.code] || GuiTextBox.numbers[e.code]) {
+                                this.insert_char(letter, e);
+                            }
+                            break;
+                    }
+            }
+            else {
+                switch (type) {
+                    case ("keydown"):
+                        switch (e.code) {
+                            case ("Minus"):
+                                this.insert_char("-", e);
+                                break;
+                            case ("Slash"):
+                                this.insert_char("/", e);
+                                break;
+                            case ("Equal"):
+                                this.insert_char("=", e);
+                                break;
+                            case ("NumpadEnter"):
+                            case ("Enter"):
+                                this.deactivate();
+                                if (this.submissionButton) {
+                                    this.submissionButton.activate();
+                                    this.submissionButton.handleKeyBoardEvents(type, e);
+                                }
+                                break;
+                            case ("BracketLeft"):
+                                this.insert_char("[", e);
+                                break;
+                            case ("BracketRight"):
+                                this.insert_char("]", e);
+                                break;
+                            case ("Semicolon"):
+                                this.insert_char(";", e);
+                                break;
+                            case ("Space"):
+                                this.text = this.text.substring(0, this.cursor) + ' ' + this.text.substring(this.cursor, this.text.length);
+                                this.cursor++;
+                                break;
+                            case ("Backspace"):
+                                this.text = this.text.substring(0, this.cursor - 1) + this.text.substring(this.cursor, this.text.length);
+                                this.cursor -= +(this.cursor > 0);
+                                break;
+                            case ("Delete"):
+                                this.text = this.text.substring(0, this.cursor) + this.text.substring(this.cursor + 1, this.text.length);
+                                break;
+                            case ("ArrowLeft"):
+                                this.cursor -= +(this.cursor > 0);
+                                break;
+                            case ("ArrowRight"):
+                                this.cursor += +(this.cursor < this.text.length);
+                                break;
+                            case ("ArrowUp"):
+                                this.cursor = 0;
+                                break;
+                            case ("ArrowDown"):
+                                this.cursor = (this.text.length);
+                                break;
+                            case ("Period"):
+                                this.text = this.text.substring(0, this.cursor) + "." + this.text.substring(this.cursor, this.text.length);
+                                this.cursor++;
+                                break;
+                            case ("Comma"):
+                                this.text = this.text.substring(0, this.cursor) + "," + this.text.substring(this.cursor, this.text.length);
+                                this.cursor++;
+                                break;
+                            default:
+                                {
+                                    let letter = e.code.substring(e.code.length - 1);
+                                    if (!e.keysHeld["ShiftRight"] && !e.keysHeld["ShiftLeft"])
+                                        letter = letter.toLowerCase();
+                                    if (GuiTextBox.textLookup[e.code] || GuiTextBox.numbers[e.code]) {
+                                        this.text = this.text.substring(0, this.cursor) + letter + this.text.substring(this.cursor, this.text.length);
+                                        this.cursor++;
+                                    }
+                                    else if (GuiTextBox.specialChars[e.code]) {
+                                        //todo
+                                    }
+                                    else if (e.code.substring(0, "Numpad".length) === "Numpad") {
+                                        this.text = this.text.substring(0, this.cursor) + letter + this.text.substring(this.cursor, this.text.length);
+                                        this.cursor++;
+                                    }
+                                }
+                        }
+                        this.calcNumber();
+                        if (this.validationCallback) {
+                            if (!this.validationCallback({ textbox: this, event: e, oldCursor: oldCursor, oldText: oldText })) {
+                                this.text = oldText;
+                                this.cursor = oldCursor;
+                            }
+                            else {
+                                this.drawInternalAndClear();
+                            }
+=======
             switch (type) {
                 case ("keydown"):
                     switch (e.code) {
@@ -1256,14 +1661,19 @@ export class GuiTextBox {
                         if (!this.validationCallback({ textbox: this, event: e, oldCursor: oldCursor, oldText: oldText })) {
                             this.text = oldText;
                             this.cursor = oldCursor;
+>>>>>>> e3b2b3fbb56e7ba491485ca10d9bee18415f7498
                         }
                         else {
                             this.drawInternalAndClear();
                         }
+<<<<<<< HEAD
+                }
+=======
                     }
                     else {
                         this.drawInternalAndClear();
                     }
+>>>>>>> e3b2b3fbb56e7ba491485ca10d9bee18415f7498
             }
         }
         if (preventDefault)
@@ -1911,7 +2321,10 @@ export class Sprite {
         this.refreshImage();
     }
     copyImage(image) {
+<<<<<<< HEAD
+=======
         console.log(image.width, image.height);
+>>>>>>> e3b2b3fbb56e7ba491485ca10d9bee18415f7498
         this.width = image.width;
         this.height = image.height;
         this.image.width = this.width;
@@ -2113,6 +2526,24 @@ export class SpriteAnimation {
     }
 }
 ;
+<<<<<<< HEAD
+let width = Math.min(document.body.scrollWidth, document.documentElement.scrollWidth, document.body.offsetWidth, document.documentElement.offsetWidth, document.documentElement.clientWidth);
+let height = Math.min(
+//document.body.scrollHeight,
+//document.documentElement.scrollHeight,
+//document.body.offsetHeight,
+//document.documentElement.offsetHeight//,
+document.body.clientHeight);
+window.addEventListener("resize", () => {
+    width = Math.min(document.body.scrollWidth, document.documentElement.scrollWidth, document.body.offsetWidth, document.documentElement.offsetWidth, document.body.clientWidth);
+    height = document.body.clientHeight;
+});
+export function getWidth() {
+    return width;
+}
+export function getHeight() {
+    return height;
+=======
 export function getWidth() {
     return Math.min(document.body.scrollWidth, document.documentElement.scrollWidth, document.body.offsetWidth, document.documentElement.offsetWidth, document.documentElement.clientWidth);
 }
@@ -2123,6 +2554,7 @@ export function getHeight() {
     //document.body.offsetHeight,
     //document.documentElement.offsetHeight//,
     document.documentElement.clientHeight);
+>>>>>>> e3b2b3fbb56e7ba491485ca10d9bee18415f7498
 }
 export class RegularPolygon {
     constructor(radius, sides) {

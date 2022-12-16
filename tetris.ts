@@ -1,5 +1,5 @@
 import {SingleTouchListener, TouchMoveEvent, time_since_start_touch, isTouchSupported} from './io.js'
-import {RGB} from './gui.js'
+import {RGB, getWidth, getHeight} from './gui.js'
 import {} from './game_utils'
 import {FixedSizeQueue, Queue, sleep} from './utils.js'
 interface Point {
@@ -754,36 +754,7 @@ function toggleBackgroundColorButton(button:HTMLElement, selected:boolean):void
     else
         button.style.background = "#808080";
 }
-let width:number = Math.min(
-    document.body.scrollWidth,
-    document.documentElement.scrollWidth,
-    document.body.offsetWidth,
-    document.documentElement.offsetWidth,
-    document.documentElement.clientWidth
-  );
-let height:number = Math.min(
-    //document.body.scrollHeight,
-    //document.documentElement.scrollHeight,
-    //document.body.offsetHeight,
-    //document.documentElement.offsetHeight//,
-    document.documentElement.innerHeight
-  );
-window.addEventListener("resize", () => {
-    width = Math.min(
-        document.body.scrollWidth,
-        document.documentElement.scrollWidth,
-        document.body.offsetWidth,
-        document.documentElement.offsetWidth,
-        document.documentElement.clientWidth
-      );
-    height = document.documentElement.innerHeight;
-});
-export function getWidth():number {
-    return width;
-}
-export function getHeight():number {
-    return height;
-}
+
 function main():void
 {
     const canvas:HTMLCanvasElement = <HTMLCanvasElement> document.getElementById("screen")!;
@@ -796,7 +767,7 @@ function main():void
     const dim = canvas.width;
     let field = new Field(canvas, ctx, 25);
     const snHeight = document.getElementById("site_name")!.clientHeight
-    field.resize(getWidth(), getHeight()-snHeight*3);
+    field.resize(getWidth(), getHeight());
 
     const gridToggleButton = document.getElementById("gridToggleButton")!;
     gridToggleButton.addEventListener("click", event => {field.drawGrid = !field.drawGrid; toggleBackgroundColorButton(gridToggleButton, field.drawGrid);});
@@ -835,16 +806,17 @@ function main():void
     let count = 0;
     let last_update = Date.now();
     let width = getWidth();
-    let height = getHeight()-snHeight*3;
+    let height = getHeight() - 3 * snHeight;
     let draw = () => {
-        if(width !== getWidth() || height !== getHeight()-snHeight*3)
+        if(width !== getWidth() || height !== getHeight())
         {
-            field.resize(getWidth(), getHeight()-snHeight*3);
+            console.log(getHeight(), height, getWidth(), width);
+            field.resize(getWidth(), getHeight() - 3 * snHeight);
             width = getWidth();
-            height = getHeight()-snHeight*3;
+            height = getHeight();
         }
         count++;
-        ctx.clearRect(0,0,canvas.width,canvas.height)
+        ctx.clearRect(0,0,canvas.width,canvas.height);
         ctx.fillStyle = "#FF0000";
         if((field.maxLevel - field.level) * 15 < Date.now() - last_update)
         {

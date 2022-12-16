@@ -1,5 +1,5 @@
 import { SingleTouchListener, time_since_start_touch, isTouchSupported } from './io.js';
-import { RGB } from './gui.js';
+import { RGB, getWidth, getHeight } from './gui.js';
 import { Queue } from './utils.js';
 ;
 class Field {
@@ -601,23 +601,6 @@ function toggleBackgroundColorButton(button, selected) {
     else
         button.style.background = "#808080";
 }
-let width = Math.min(document.body.scrollWidth, document.documentElement.scrollWidth, document.body.offsetWidth, document.documentElement.offsetWidth, document.documentElement.clientWidth);
-let height = Math.min(
-//document.body.scrollHeight,
-//document.documentElement.scrollHeight,
-//document.body.offsetHeight,
-//document.documentElement.offsetHeight//,
-document.documentElement.innerHeight);
-window.addEventListener("resize", () => {
-    width = Math.min(document.body.scrollWidth, document.documentElement.scrollWidth, document.body.offsetWidth, document.documentElement.offsetWidth, document.documentElement.clientWidth);
-    height = document.documentElement.innerHeight;
-});
-export function getWidth() {
-    return width;
-}
-export function getHeight() {
-    return height;
-}
 function main() {
     const canvas = document.getElementById("screen");
     const ctx = canvas.getContext("2d");
@@ -627,7 +610,7 @@ function main() {
     const dim = canvas.width;
     let field = new Field(canvas, ctx, 25);
     const snHeight = document.getElementById("site_name").clientHeight;
-    field.resize(getWidth(), getHeight() - snHeight * 3);
+    field.resize(getWidth(), getHeight());
     const gridToggleButton = document.getElementById("gridToggleButton");
     gridToggleButton.addEventListener("click", event => { field.drawGrid = !field.drawGrid; toggleBackgroundColorButton(gridToggleButton, field.drawGrid); });
     toggleBackgroundColorButton(gridToggleButton, field.drawGrid);
@@ -667,12 +650,13 @@ function main() {
     let count = 0;
     let last_update = Date.now();
     let width = getWidth();
-    let height = getHeight() - snHeight * 3;
+    let height = getHeight() - 3 * snHeight;
     let draw = () => {
-        if (width !== getWidth() || height !== getHeight() - snHeight * 3) {
-            field.resize(getWidth(), getHeight() - snHeight * 3);
+        if (width !== getWidth() || height !== getHeight()) {
+            console.log(getHeight(), height, getWidth(), width);
+            field.resize(getWidth(), getHeight() - 3 * snHeight);
             width = getWidth();
-            height = getHeight() - snHeight * 3;
+            height = getHeight();
         }
         count++;
         ctx.clearRect(0, 0, canvas.width, canvas.height);

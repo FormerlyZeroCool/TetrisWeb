@@ -2912,7 +2912,8 @@ let height:number = Math.min(
     //document.documentElement.offsetHeight//,
     document.body.clientHeight
   );
-window.addEventListener("resize", () => {
+
+  window.addEventListener("resize", () => {
     width = Math.min(
         document.body.scrollWidth,
         document.documentElement.scrollWidth,

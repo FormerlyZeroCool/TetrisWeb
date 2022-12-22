@@ -514,12 +514,12 @@ class Field {
     //places a piece on any field for drawing
     placeAny(piece:Tetramino, field:RGB[], w:number):void
     {
+        const color = new RGB(0,0,0);
         for(let i = 0; i < piece.vectors.length; i++)
         {
             const point = [piece.vectors[i][0] + piece.center[0], piece.vectors[i][1] + piece.center[1]];
             if(point[0] + point[1] * w < field.length)
             {
-                const color = new RGB(0,0,0);
                 color.loadString(piece.color);
                 field[point[0] + point[1] * w] = color;
             }
@@ -599,7 +599,19 @@ class Field {
             }
         }
     }
-    
+    fillSpace(color:string, gx:number, gy:number, fill:boolean = true, width:number = this.boundedWidth/this.w, height:number = this.boundedHeight/this.h):void
+    {
+        if(fill)
+        {
+            this.ctx.fillStyle = color;
+            this.ctx.fillRect(gx, gy, width, height);
+            this.ctx.strokeStyle = "#FFFFFF";
+        }
+        
+        this.ctx.strokeRect(gx+width/4, gy+height/4, width/2, height/2);
+        this.ctx.strokeStyle = !fill ? "#FFFFFF" : "#000000";
+        this.ctx.strokeRect(gx, gy, width, height);
+    }
     draw():void
     {
         let width = this.boundedWidth/this.w;
@@ -609,17 +621,14 @@ class Field {
         if(this.showProjectedLanding)
         {
             this.calcProjectedLanding();
-            //if(this.livePiece.center[0] != this.projectedLandingPiece.center[0] || this.livePiece.center[1] != this.projectedLandingPiece.center[1])
-                for(let i = 0; i < this.projectedLandingPiece.vectors.length; i++)
-                {
-                    const vector = this.projectedLandingPiece.vectors[i];
-                    const gx = this.xOffset + Math.floor((this.projectedLandingPiece.center[0] + vector[0])*this.boundedWidth/this.w);
-                    const gy = Math.floor((this.projectedLandingPiece.center[1] + vector[1])*this.boundedHeight/this.h);
-                    this.ctx.strokeStyle = "#FFFFFF";
-                    this.ctx.strokeRect(gx, gy, width, height);
-                    this.ctx.strokeStyle =this.projectedLandingPiece.color;
-                    this.ctx.strokeRect(gx+width/4, gy+height/4, width/2, height/2);
-                }
+            for(let i = 0; i < this.projectedLandingPiece.vectors.length; i++)
+            {
+                const vector = this.projectedLandingPiece.vectors[i];
+                const gx = this.xOffset + Math.floor((this.projectedLandingPiece.center[0] + vector[0])*this.boundedWidth/this.w);
+                const gy = Math.floor((this.projectedLandingPiece.center[1] + vector[1])*this.boundedHeight/this.h);
+                this.ctx.strokeStyle = this.livePiece.color;
+                this.fillSpace("#000000", gx, gy, false);
+            }
         }
         for(let i = 0; i < this.livePiece.vectors.length; i++)
         {
@@ -627,28 +636,15 @@ class Field {
             const gx = this.xOffset + Math.floor((this.livePiece.center[0] + vector[0])*this.boundedWidth/this.w);
             const gy = Math.floor((this.livePiece.center[1] + vector[1])*this.boundedHeight/this.h);
             
-            this.ctx.fillStyle = this.livePiece.color;
-            this.ctx.fillRect(gx, gy, width, height);
-            
-            this.ctx.strokeStyle = "#000000";
-            this.ctx.strokeRect(gx, gy, width, height);
-
-            this.ctx.strokeStyle = "#FFFFFF";
-            this.ctx.strokeRect(gx+width/4, gy+height/4, width/2, height/2);
+            this.fillSpace(this.livePiece.color, gx, gy);
         }
         for(let y = 0; y < this.h; y++)
         {
             for(let x = 0; x < this.w; x++)
-            {
-                const color = this.field[x + y*this.w].color;
-                this.ctx.fillStyle = this.field[x + y*this.w].htmlRBG();
-                
-                if(color !== this.default_color.color){
-                    this.ctx.fillRect(this.xOffset + x*width, y*height, width, height);
-                    this.ctx.strokeStyle = "#000000";
-                    this.ctx.strokeRect(this.xOffset + x*width, y*height, width, height);
-                    this.ctx.strokeStyle = "#FFFFFF";
-                    this.ctx.strokeRect(this.xOffset + x*width+width/4, y*height+height/4, width/2, height/2);
+            {   
+                if(this.field[x + y*this.w].color !== this.default_color.color)
+                {
+                    this.fillSpace(this.field[x + y*this.w].htmlRBG(), this.xOffset + x * width, y * height);
                 }
                 this.ctx.strokeStyle = "#FFFFFF";
                 if(this.drawGrid)
@@ -687,12 +683,7 @@ class Field {
                         if(color !== this.default_color.color){
                             this.ctx.fillStyle = field[x + y*5].htmlRBG();
                             this.ctx.fillRect(gx, gy, width, height);
-    
-                            this.ctx.strokeStyle = "#000000";
-                            this.ctx.strokeRect(gx, gy, width, height);
-    
-                            this.ctx.strokeStyle = "#FFFFFF";
-                            this.ctx.strokeRect(gx+width/4, gy+height/4, width/2, height/2);
+                            this.fillSpace(field[x + y*5].htmlRBG(), gx, gy, true, width, height);
                         }
                     }
                 }
@@ -720,11 +711,7 @@ class Field {
                     if(color !== this.default_color.color){
                         this.ctx.fillStyle = field[x + y*5].htmlRBG();
                         this.ctx.fillRect(gx, gy, width, height);
-
-                        this.ctx.strokeStyle = "#000000";
-                        this.ctx.strokeRect(gx, gy, width, height);
-                        this.ctx.strokeStyle = "#FFFFFF";
-                        this.ctx.strokeRect(gx+width/4, gy+height/4, width/2, height/2);
+                        this.fillSpace(field[x + y*5].htmlRBG(), gx, gy, true, width, height);
                     }
                 }
             }

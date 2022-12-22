@@ -626,6 +626,8 @@ class Field {
             return;
 
         this.repaint = false;
+        this.ctx.clearRect(0,0, this.canvas.width, this.canvas.height);
+        this.ctx.fillStyle = "#FF0000";
         
         let width = this.boundedWidth/this.w;
         let height = this.boundedHeight/this.h;
@@ -827,8 +829,6 @@ function main():void
                 field.update();
                 last_update = Date.now();
             }
-            ctx.clearRect(0,0,canvas.width,canvas.height);
-            ctx.fillStyle = "#FF0000";
         }
         field.draw();
         requestAnimationFrame(draw);

@@ -431,6 +431,7 @@ class Field {
     update() {
         if (!this.active)
             return;
+        this.repaint = true;
         //check if any rows have been cleared
         //if they are clear them, and translate rows above down
         //returns count of rows cleared
@@ -449,7 +450,6 @@ class Field {
         while (this.calcMaxScore(this.level) < this.score) {
             this.level++;
         }
-        this.repaint = true;
         //check if piece can be moved down one
         if (this.isClearBelow(this.livePiece)) {
             //move piece down one 

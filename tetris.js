@@ -5,6 +5,7 @@ import { Queue } from './utils.js';
 class Field {
     constructor(canvas, ctx, maxLevel) {
         this.canvas = canvas;
+        this.repaint = true;
         this.ctx = ctx;
         this.boundedWidth = canvas.width - canvas.width / 10;
         this.boundedHeight = canvas.height;
@@ -274,6 +275,7 @@ class Field {
         this.pieceQueue.push(this.genRandomNewPiece());
         this.livePiece.center = [this.w / 2, 1];
         this.listenerHandler.registeredTouch = false;
+        this.repaint = true;
     }
     moveDown() {
         if (this.isClearTranslated(this.livePiece, [0, 1]))
@@ -281,6 +283,7 @@ class Field {
     }
     onKeyPress(event) {
         if (this.active) {
+            this.repaint = true;
             if (event.code === "Space") //Hard drop
              {
                 this.hardDrop();
@@ -345,6 +348,7 @@ class Field {
         //reset field for drawing
         for (let i = 0; i < this.field.length; i++)
             this.field[i] = this.default_color;
+        this.repaint = true;
     }
     getFilledRows() {
         const arr = [];
@@ -407,6 +411,7 @@ class Field {
     }
     //places a piece on any field for drawing
     placeAny(piece, field, w) {
+        this.repaint = true;
         const color = new RGB(0, 0, 0);
         for (let i = 0; i < piece.vectors.length; i++) {
             const point = [piece.vectors[i][0] + piece.center[0], piece.vectors[i][1] + piece.center[1]];
@@ -444,6 +449,7 @@ class Field {
         while (this.calcMaxScore(this.level) < this.score) {
             this.level++;
         }
+        this.repaint = true;
         //check if piece can be moved down one
         if (this.isClearBelow(this.livePiece)) {
             //move piece down one 
@@ -489,6 +495,9 @@ class Field {
         this.ctx.strokeRect(gx, gy, width, height);
     }
     draw() {
+        if (!this.repaint)
+            return;
+        this.repaint = false;
         let width = this.boundedWidth / this.w;
         let height = this.boundedHeight / this.h;
         this.ctx.fillStyle = "#000000";
@@ -583,6 +592,9 @@ class Field {
     resetTouch() {
         this.piecePosAtTouchStart = [this.livePiece.center[0] * this.boundedWidth / this.w, this.livePiece.center[1] * this.boundedHeight / this.h];
     }
+    wait_per_update() {
+        return (this.maxLevel - this.level) * 15;
+    }
 }
 ;
 function toggleBackgroundColorButton(button, selected) {
@@ -649,11 +661,14 @@ function main() {
             height = getHeight();
         }
         count++;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "#FF0000";
-        if ((field.maxLevel - field.level) * 15 < Date.now() - last_update) {
-            field.update();
-            last_update = Date.now();
+        if (field.wait_per_update() < Date.now() - last_update) {
+            const updates = Math.floor((Date.now() - last_update) / field.wait_per_update());
+            for (let i = 0; i < updates && i < 5; i++) {
+                field.update();
+                last_update = Date.now();
+            }
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#FF0000";
         }
         field.draw();
         requestAnimationFrame(draw);

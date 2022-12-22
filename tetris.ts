@@ -15,6 +15,7 @@ interface Tetramino {
 };
 class Field {
     field:RGB[];
+    repaint:boolean;
     default_color:RGB;
     placementTimer:number;
     livePiece:Tetramino;
@@ -45,6 +46,7 @@ class Field {
     constructor(canvas:HTMLCanvasElement, ctx:CanvasRenderingContext2D, maxLevel:number)
     {
         this.canvas = canvas;
+        this.repaint = true;
         this.ctx = ctx;
         this.boundedWidth = canvas.width-canvas.width/10;
         this.boundedHeight = canvas.height;
@@ -363,6 +365,7 @@ class Field {
         this.pieceQueue.push(this.genRandomNewPiece());
         this.livePiece.center = [this.w/2, 1];
         this.listenerHandler.registeredTouch = false;
+        this.repaint = true;
     }
     moveDown():void
     {
@@ -373,6 +376,7 @@ class Field {
     {
         if(this.active)
         {
+            this.repaint = true;
             if(event.code === "Space")//Hard drop
             {
                 this.hardDrop();
@@ -443,6 +447,8 @@ class Field {
         //reset field for drawing
         for(let i = 0; i < this.field.length; i++)
             this.field[i] = this.default_color;
+        
+        this.repaint = true;
     }
     getFilledRows():number[]
     {
@@ -514,6 +520,7 @@ class Field {
     //places a piece on any field for drawing
     placeAny(piece:Tetramino, field:RGB[], w:number):void
     {
+        this.repaint = true;
         const color = new RGB(0,0,0);
         for(let i = 0; i < piece.vectors.length; i++)
         {
@@ -559,6 +566,7 @@ class Field {
         {
             this.level++;
         }
+        this.repaint = true;
         //check if piece can be moved down one
         if(this.isClearBelow(this.livePiece))
         {
@@ -614,6 +622,11 @@ class Field {
     }
     draw():void
     {
+        if(!this.repaint)
+            return;
+
+        this.repaint = false;
+        
         let width = this.boundedWidth/this.w;
         let height = this.boundedHeight/this.h;
         this.ctx.fillStyle = "#000000";
@@ -633,8 +646,8 @@ class Field {
         for(let i = 0; i < this.livePiece.vectors.length; i++)
         {
             const vector = this.livePiece.vectors[i];
-            const gx = this.xOffset + Math.floor((this.livePiece.center[0] + vector[0])*this.boundedWidth/this.w);
-            const gy = Math.floor((this.livePiece.center[1] + vector[1])*this.boundedHeight/this.h);
+            const gx = this.xOffset + Math.floor((this.livePiece.center[0] + vector[0]) * this.boundedWidth / this.w);
+            const gy = Math.floor((this.livePiece.center[1] + vector[1]) * this.boundedHeight / this.h);
             
             this.fillSpace(this.livePiece.color, gx, gy);
         }
@@ -648,7 +661,7 @@ class Field {
                 }
                 this.ctx.strokeStyle = "#FFFFFF";
                 if(this.drawGrid)
-                    this.ctx.strokeRect(this.xOffset + x*width, y*height, width, height);
+                    this.ctx.strokeRect(this.xOffset + x * width, y * height, width, height);
 
             }
         }
@@ -732,7 +745,10 @@ class Field {
         this.piecePosAtTouchStart = [this.livePiece.center[0]*this.boundedWidth/this.w,this.livePiece.center[1]*this.boundedHeight/this.h];
     }
 
-    
+    wait_per_update():number
+    {
+        return (this.maxLevel - this.level) * 15;
+    }
 };
 function toggleBackgroundColorButton(button:HTMLElement, selected:boolean):void
 {
@@ -803,12 +819,16 @@ function main():void
             height = getHeight();
         }
         count++;
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        ctx.fillStyle = "#FF0000";
-        if((field.maxLevel - field.level) * 15 < Date.now() - last_update)
+        if(field.wait_per_update() < Date.now() - last_update)
         {
-            field.update();
-            last_update = Date.now();
+            const updates = Math.floor((Date.now() - last_update) / field.wait_per_update());
+            for(let i = 0; i < updates && i < 5; i++)
+            {
+                field.update();
+                last_update = Date.now();
+            }
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle = "#FF0000";
         }
         field.draw();
         requestAnimationFrame(draw);

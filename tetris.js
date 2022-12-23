@@ -197,7 +197,7 @@ class Field {
     isClear(piece) {
         for (let i = 0; i < piece.vectors.length; i++) {
             const point = [piece.vectors[i][0] + piece.center[0], piece.vectors[i][1] + piece.center[1]];
-            if (this.field[point[0] + point[1] * this.w].color !== this.default_color.color) {
+            if (this.field[point[0] + point[1] * this.w].compare_not(this.default_color)) {
                 return false;
             }
         }
@@ -326,7 +326,7 @@ class Field {
             const point = [piece.vectors[i][0] + center[0], piece.vectors[i][1] + center[1]];
             if (point[1] >= this.h || point[0] < 0 || point[0] >= this.w)
                 return false;
-            else if (this.field[point[0] + point[1] * this.w].color != this.default_color.color)
+            else if (this.field[point[0] + point[1] * this.w].compare_not(this.default_color))
                 return false;
         }
         return true;
@@ -355,7 +355,7 @@ class Field {
         for (let y = 0; y < this.h; y++) {
             let full = true;
             for (let x = 0; full && x < this.w; x++) {
-                full = this.field[x + y * this.w].color !== this.default_color.color;
+                full = this.field[x + y * this.w].compare_not(this.default_color);
             }
             if (full)
                 arr.push(y);
@@ -505,7 +505,7 @@ class Field {
         }
         for (let y = 0; y < this.h; y++) {
             for (let x = 0; x < this.w; x++) {
-                if (this.field[x + y * this.w].color !== this.default_color.color) {
+                if (this.field[x + y * this.w].compare_not(this.default_color)) {
                     this.fillSpace(this.field[x + y * this.w].htmlRBG(), this.xOffset + x * width, y * height);
                 }
                 this.ctx.strokeStyle = "#FFFFFF";
@@ -570,8 +570,8 @@ class Field {
             this.ctx.font = '48px Calibri';
             this.ctx.fillStyle = "#DF0000";
             this.ctx.strokeStyle = "#FFFFFF";
-            this.ctx.fillText('Game Paused', this.boundedWidth / 2 - this.boundedWidth / 4, this.boundedHeight / 2);
-            this.ctx.strokeText('Game Paused', this.boundedWidth / 2 - this.boundedWidth / 4, this.boundedHeight / 2);
+            this.ctx.fillText('Game Paused', this.xOffset + this.boundedWidth / 2 - this.boundedWidth / 4, this.boundedHeight / 2);
+            this.ctx.strokeText('Game Paused', this.xOffset + this.boundedWidth / 2 - this.boundedWidth / 4, this.boundedHeight / 2);
         }
     }
     resetTouch() {

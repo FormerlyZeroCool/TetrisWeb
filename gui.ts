@@ -107,6 +107,10 @@ export class RGB {
     {
         return color && this.color === color.color;
     }
+    compare_not(color:RGB):boolean
+    {
+        return color && this.color !== color.color;
+    }
     copy(color:RGB):RGB
     {
         this.color = color.color;

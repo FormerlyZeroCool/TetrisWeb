@@ -89,6 +89,9 @@ export class RGB {
     compare(color) {
         return color && this.color === color.color;
     }
+    compare_not(color) {
+        return color && this.color !== color.color;
+    }
     copy(color) {
         this.color = color.color;
         return this;

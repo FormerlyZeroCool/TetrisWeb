@@ -412,7 +412,7 @@ class Field {
         for(let i = 0; i < piece.vectors.length; i++)
         {
             const point = [piece.vectors[i][0]+piece.center[0], piece.vectors[i][1]+piece.center[1]];
-            this.field[point[0] + point[1] * this.w] = this.default_color;
+            this.field[point[0] + point[1] * this.w].copy(this.default_color);
         }
     }
     isClearTranslated(piece:Tetramino, vector:number[]):boolean
@@ -609,12 +609,12 @@ class Field {
         if(!this.repaint)
             return;
 
-        this.repaint = false;
-        this.ctx.clearRect(0,0, this.canvas.width, this.canvas.height);
-        this.ctx.fillStyle = "#FF0000";
-        
         let width = this.boundedWidth/this.w;
         let height = this.boundedHeight/this.h;
+        this.repaint = false;
+        this.ctx.clearRect(this.xOffset, 0, Math.min(this.canvas.width - this.xOffset, this.boundedWidth + this.boundedWidth / 2), this.boundedHeight);
+        this.ctx.fillStyle = "#FF0000";
+        
         this.ctx.fillStyle = "#000000";
         this.ctx.fillRect(this.xOffset, 0, this.boundedWidth, this.boundedHeight);
         if(this.showProjectedLanding)

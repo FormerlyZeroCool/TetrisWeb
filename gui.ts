@@ -107,9 +107,10 @@ export class RGB {
     {
         return color && this.color === color.color;
     }
-    copy(color:RGB):void
+    copy(color:RGB):RGB
     {
         this.color = color.color;
+        return this;
     }
     toInt():number
     {

@@ -91,6 +91,7 @@ export class RGB {
     }
     copy(color) {
         this.color = color.color;
+        return this;
     }
     toInt() {
         return this.color;

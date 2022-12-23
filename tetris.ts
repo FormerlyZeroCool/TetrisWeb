@@ -151,7 +151,7 @@ class Field {
         this.default_color = new RGB(0, 0, 0, 255);
         for(let i = 0; i < this.w*this.h;i++)
         {
-            this.field.push(this.default_color);
+            this.field.push(new RGB(0, 0, 0, 255));
         }
         this.placementTimer = Date.now();
     }
@@ -269,7 +269,7 @@ class Field {
         for(let i = 0; i < piece.vectors.length; i++)
         {
             const point = [piece.vectors[i][0]+piece.center[0], piece.vectors[i][1]+piece.center[1]];
-            if(this.field[point[0] + point[1]*this.w] !== this.default_color)
+            if(this.field[point[0] + point[1]*this.w].color !== this.default_color.color)
             {
                 return false;
             }
@@ -446,7 +446,7 @@ class Field {
             this.pieceQueue.push(this.genRandomNewPiece());
         //reset field for drawing
         for(let i = 0; i < this.field.length; i++)
-            this.field[i] = this.default_color;
+            this.field[i].copy(this.default_color);
         
         this.repaint = true;
     }
@@ -479,56 +479,40 @@ class Field {
     {
         //get list of the indexes of rows to be cleared
         const filled = this.getFilledRows();
-        //load the field as vectors relative to a point with color as an attribute per rect
-        const topOfField:number[][] = [];
-        //reserve known amount of memory for array to avoid copying
-        topOfField.length = this.w*this.h;
-        for(let y = 0; y  < this.h; y++)
+        //clear rows by shifting all elements less than each filled row starting at the topmost
+        //iterating to the bottom most
+        for(let i = 0; i < filled.length; i++)
         {
-            for(let x = 0; x < this.w; x++)
-                if(this.field[x + y*this.w].color !== this.default_color.color)  {
-                    topOfField.push([x,y, this.field[x + y*this.w].color]);
-                }
-
+            this.clearRow(filled[i] + 1);
         }
-        //create "piece" that represents the field as vectors relative to a point
-        const activated:Tetramino = {type:"field",center:[0,0], vectors:topOfField, color:"#000000", swapped:false};
-        for(let y = 0; y < this.h; y++)
-        {
-            for(let x = 0; x < this.w; x++)
-                this.field[x + y*this.w].color = this.default_color.color;
-        }
-        //remove one row per iteration of loop
-        for(let i = 0; i < filled.length; i ++)
-        {
-            const rowNum = filled[i];
-            //remove vectors with y value matching filled row index to remove row at index i
-            activated.vectors = activated.vectors.filter( function(item, idx) {
-                return item[1] != rowNum;
-            });
-            //add one to all the vectors with a y mag greater than the filled row by one
-            for(let i = 0; i < activated.vectors.length;i++){
-                if(activated.vectors[i][1] < rowNum)
-                    activated.vectors[i][1]++;
-            };
-        }
-        //put field as vectors back into field represented as list of colors
-        this.placeField(activated);
+        this.repaint = true;
         //return count of rows removed
         return filled.length;
+    }
+    clearRow(index:number):void
+    {
+        const shift_limit = index * this.w - 1;
+        for(let i = shift_limit; i >= this.w; i--)
+        {
+            this.field[i].copy(this.field[i - this.w]);
+        }
+        for(let i = 0; i < this.w; i++)
+        {
+            this.field[i].copy(this.default_color);
+        }
     }
     //places a piece on any field for drawing
     placeAny(piece:Tetramino, field:RGB[], w:number):void
     {
         this.repaint = true;
         const color = new RGB(0,0,0);
+        color.loadString(piece.color);
         for(let i = 0; i < piece.vectors.length; i++)
         {
             const point = [piece.vectors[i][0] + piece.center[0], piece.vectors[i][1] + piece.center[1]];
             if(point[0] + point[1] * w < field.length)
             {
-                color.loadString(piece.color);
-                field[point[0] + point[1] * w] = color;
+                field[point[0] + point[1] * w].copy(color);
             }
         }
     }
@@ -592,7 +576,7 @@ class Field {
             this.pieceQueue.push(this.genRandomNewPiece());
 
             //check if top row is full
-            const topRow:Tetramino = {type:"none", center:[0,0],vectors:[],color:"#000000", swapped:false};
+            const topRow:Tetramino = {type:"none", center:[0,0],vectors:[], color:"#000000", swapped:false};
             //building vectors to point to top row
             for(let i = 0; i < this.w; i++)
             {
@@ -682,7 +666,7 @@ class Field {
             {
                 let field:RGB[] = [];
                 for(let j = 0; j < 25; j++)
-                    field.push(this.default_color);
+                    field.push(new RGB(0,0,0,0).copy(this.default_color));
                 const piece:Tetramino = {type:this.pieceQueue.get(i).type,center:[2,2], vectors:this.pieceQueue.get(i).vectors, color:this.pieceQueue.get(i).color, swapped:this.pieceQueue.get(i).swapped};
                 
                 this.placeAny(piece, field, 5);
@@ -696,8 +680,8 @@ class Field {
                         const gx = this.xOffset + this.boundedWidth+5+(width)*x;
                         const gy = hoffset+(height*5.2)*i+(height)*y;
                         if(color !== this.default_color.color){
-                            this.ctx.fillStyle = field[x + y*5].htmlRBG();
-                            this.ctx.fillRect(gx, gy, width, height);
+                            //this.ctx.fillStyle = field[x + y*5].htmlRBG();
+                            //this.ctx.fillRect(gx, gy, width, height);
                             this.fillSpace(field[x + y*5].htmlRBG(), gx, gy, true, width, height);
                         }
                     }
@@ -710,7 +694,7 @@ class Field {
         {
             let field:RGB[] = [];
             for(let j = 0; j < 25; j++)
-                field.push(this.default_color);
+                field.push(new RGB(0,0,0,0).copy(this.default_color));
             const piece:Tetramino = {type:this.holdPiece.type,center:[2,1], vectors:this.holdPiece.vectors, color:this.holdPiece.color, swapped:this.holdPiece.swapped};
             
             this.placeAny(piece, field, 5);
@@ -724,8 +708,8 @@ class Field {
                     const gx = this.xOffset + this.boundedWidth+5+(width)*x;
                     const gy = 30+(height)*y+5;
                     if(color !== this.default_color.color){
-                        this.ctx.fillStyle = field[x + y*5].htmlRBG();
-                        this.ctx.fillRect(gx, gy, width, height);
+                        //this.ctx.fillStyle = field[x + y*5].htmlRBG();
+                        //this.ctx.fillRect(gx, gy, width, height);
                         this.fillSpace(field[x + y*5].htmlRBG(), gx, gy, true, width, height);
                     }
                 }
@@ -771,6 +755,7 @@ function main():void
     let x = 0
     const dim = canvas.width;
     let field = new Field(canvas, ctx, 25);
+    window.game = field;
     const snHeight = document.getElementById("site_name")!.clientHeight
     field.resize(getWidth(), getHeight());
 
@@ -829,7 +814,7 @@ function main():void
                 field.update();
                 last_update = Date.now();
             }
-            
+
         }
         field.draw();
         requestAnimationFrame(draw);

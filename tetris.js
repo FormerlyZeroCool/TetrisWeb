@@ -147,7 +147,7 @@ class Field {
             }
     }
     touchmove_slideHPred(event) {
-        return this.active && (event.mag > 0.45 && (Math.abs(event.angle) >= 165 || Math.abs(event.angle) <= 15));
+        return this.active && (event.mag / this.boundedWidth > 0.01 && (Math.abs(event.angle) >= 165 || Math.abs(event.angle) <= 15));
     }
     touchmove_slideVPred(event) {
         return this.active && (event.mag > 0.13 && event.angle <= -65 && event.angle >= -115);

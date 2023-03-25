@@ -21,6 +21,7 @@ class Field {
     livePiece:Tetramino;
     pieceQueue:Queue<Tetramino>;
     pieceTypes:Tetramino[];
+    possiblePieceTypes:Tetramino[];
     holdPiece:Tetramino;
     piecePosAtTouchStart:number[];
     canvas:HTMLCanvasElement;
@@ -48,6 +49,7 @@ class Field {
         this.canvas = canvas;
         this.repaint = true;
         this.ctx = ctx;
+        this.possiblePieceTypes = [];
         this.boundedWidth = canvas.width-canvas.width/10;
         this.boundedHeight = canvas.height;
         this.xOffset = (this.canvas.width - this.boundedWidth)/2;
@@ -238,7 +240,17 @@ class Field {
     }
     genRandomNewPiece():Tetramino
     {
-        return this.clonePiece(this.pieceTypes[Math.floor(Math.random() * (this.pieceTypes.length))]);
+        if(this.possiblePieceTypes.length == 0)
+        {
+            for(let i = 0; i < this.pieceTypes.length; i++)
+            {
+                this.possiblePieceTypes.push(this.clonePiece(this.pieceTypes[i]));
+            }
+        }
+        const index = Math.floor(Math.random() * (this.possiblePieceTypes.length));
+        const piece = this.clonePiece(this.possiblePieceTypes[index]);
+        this.possiblePieceTypes.splice(index, 1);
+        return piece;
     }
     clonePiece(piece:Tetramino):Tetramino
     {

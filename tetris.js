@@ -7,6 +7,7 @@ class Field {
         this.canvas = canvas;
         this.repaint = true;
         this.ctx = ctx;
+        this.possiblePieceTypes = [];
         this.boundedWidth = canvas.width - canvas.width / 10;
         this.boundedHeight = canvas.height;
         this.xOffset = (this.canvas.width - this.boundedWidth) / 2;
@@ -172,7 +173,15 @@ class Field {
         return (this.active && event.deltaY < -40 && event.avgVelocity > 30 && event.angle >= 45 && event.angle <= 135 && time_since_start_touch(event) < 200);
     }
     genRandomNewPiece() {
-        return this.clonePiece(this.pieceTypes[Math.floor(Math.random() * (this.pieceTypes.length))]);
+        if (this.possiblePieceTypes.length == 0) {
+            for (let i = 0; i < this.pieceTypes.length; i++) {
+                this.possiblePieceTypes.push(this.clonePiece(this.pieceTypes[i]));
+            }
+        }
+        const index = Math.floor(Math.random() * (this.possiblePieceTypes.length));
+        const piece = this.clonePiece(this.possiblePieceTypes[index]);
+        this.possiblePieceTypes.splice(index, 1);
+        return piece;
     }
     clonePiece(piece) {
         const newPiece = { type: piece.type, center: [piece.center[0], piece.center[1]], vectors: [], color: piece.color, swapped: piece.swapped };

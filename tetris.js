@@ -352,7 +352,7 @@ class Field {
         this.holdPiece = { type: "null", center: [0, 0], vectors: [], color: "#000000", swapped: false };
         //reset piece queue
         const len = this.pieceQueue.length;
-        this.pieceQueue.clear;
+        this.pieceQueue.clear();
         for (let i = 0; i < len; i++)
             this.pieceQueue.push(this.genRandomNewPiece());
         //reset field for drawing

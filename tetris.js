@@ -176,11 +176,11 @@ class Field {
         if (this.possiblePieceTypes.length == 0) {
             for (let i = 0; i < this.pieceTypes.length; i++) {
                 this.possiblePieceTypes.push(this.clonePiece(this.pieceTypes[i]));
-                this.possiblePieceTypes[i].swapped = false;
             }
         }
         const index = Math.floor(Math.random() * (this.possiblePieceTypes.length));
         const piece = this.clonePiece(this.possiblePieceTypes[index]);
+        piece.swapped = false;
         this.possiblePieceTypes.splice(index, 1);
         return piece;
     }

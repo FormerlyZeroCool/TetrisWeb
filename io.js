@@ -1,5 +1,5 @@
 import { getHeight, getWidth } from "./gui.js";
-import { RollingStack, get_angle, normalize } from "./utils.js";
+import { RollingStack, get_angle, get_angle_degrees, normalize } from "./utils.js";
 export class KeyListenerTypes {
     constructor() {
         this.keydown = new Array();
@@ -70,6 +70,9 @@ export class ListenerTypes {
     }
 }
 ;
+export function time_since_start_touch(event) {
+    return Date.now() - event.startTouchTime;
+}
 ;
 const touch_support = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 export function isTouchSupported() {
@@ -207,7 +210,7 @@ export class SingleTouchListener {
             this.touchMoveCount++;
             this.deltaTouchPos += Math.abs(mag);
             this.touchVelocity = 100 * this.deltaTouchPos / (Date.now() - this.startTouchTime);
-            const angle = get_angle(deltaX, deltaY);
+            const angle = get_angle_degrees(deltaX, deltaY);
             event.deltaX = deltaX;
             event.startTouchPos = this.startTouchPos;
             event.deltaY = deltaY;
@@ -498,9 +501,6 @@ export class GenericListener extends MultiTouchListener {
     }
 }
 ;
-export function time_since_start_touch(event) {
-    return Date.now() - event.startTouchTime;
-}
 function dist(x1, y1, x2, y2) {
     const dx = x1 - x2;
     const dy = y1 - y2;

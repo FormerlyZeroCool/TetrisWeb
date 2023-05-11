@@ -196,7 +196,7 @@ class Field {
     }
     vSlide(event:TouchMoveEvent):void
     {
-        this.piecePosAtTouchStart[1] += event.deltaY*4;
+        const delta = (event.touchPos[0] - event.startTouchPos[0]) * 1.3;
         const newGridY = Math.floor(((this.piecePosAtTouchStart[1] > this.boundedHeight?this.boundedHeight:this.piecePosAtTouchStart[1])/this.boundedHeight)*this.h);
 
         if(this.active)
@@ -207,11 +207,12 @@ class Field {
     }
     touchmove_slideHPred(event:TouchMoveEvent):boolean
     {
-        return this.active;
+        return this.active //&& ( (Math.abs(event.angle) >= 165 || Math.abs(event.angle) <= 15));
     }
     touchmove_slideVPred(event:TouchMoveEvent):boolean
     {
-        return this.active && (event.mag > 0.13 && event.angle <= -65 && event.angle >= -115);
+        console.log(event.angle)
+        return this.active && ( event.angle <= -65 && event.angle >= -115);
     }
     touchend_rotatePred(event:TouchMoveEvent):boolean
     {

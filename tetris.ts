@@ -197,7 +197,6 @@ class Field {
     vSlide(event:TouchMoveEvent):void
     {
         const delta = (event.touchPos[1] - event.startTouchPos[1]) * 1.3;
-        console.log(delta)
         const newGridY = Math.round(((this.piecePosAtTouchStart[1] + delta > this.boundedHeight?this.boundedHeight:this.piecePosAtTouchStart[1] + delta)/this.boundedHeight)*this.h);
 
         if(this.active)
